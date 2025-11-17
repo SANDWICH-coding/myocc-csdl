@@ -14,7 +14,7 @@ Route::get('/', function () {
 Route::get('/open-app', function (Request $request) {
     $userId = $request->query('user_id_no');
     $deepLink = "myapp://login?user_id_no={$userId}";
-    $playStoreUrl = "https://play.google.com/store/apps/details?id=com.myocc";
+    $playStoreUrl = "https://myocc.fun/";
 
     return <<<HTML
     <!DOCTYPE html>
