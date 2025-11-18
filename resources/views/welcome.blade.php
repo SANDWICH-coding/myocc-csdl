@@ -291,8 +291,10 @@
     <!-- CTA Section -->
     <section class="cta-section" id="download">
         <h2>Get Started Now!</h2>
-        <a href="#download" class="cta-btn">
-            <i class="bi bi-android2 me-2"></i>Download for Android
+
+        <a href="{{ url('/download-apk') }}" class="cta-btn">
+            <i class="bi bi-android2 me-2"></i>
+            Download for Android ({{ $version }})
         </a>
     </section>
 

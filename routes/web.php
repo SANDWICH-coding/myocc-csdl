@@ -92,3 +92,18 @@ view()->composer('*', function ($view) {
     $view->with(compact('apkUrl', 'version'));
 });
 
+
+Route::get('/download-apk', function () {
+    $apkPath = storage_path('app/public/apk');
+    $files = File::files($apkPath);
+
+    usort($files, fn($a, $b) => $b->getMTime() <=> $a->getMTime());
+    $latest = $files[0] ?? null;
+
+    if (!$latest) {
+        abort(404);
+    }
+
+    return response()->download($latest->getRealPath(), $latest->getFilename());
+});
+
