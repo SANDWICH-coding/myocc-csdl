@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->string('sanction_name');
             $table->string('sanction_description')->nullable();
             $table->decimal('monetary_amount', 10, 2)->nullable();
-            $table->integer('service_time', 10, 2)->nullable();
+            $table->integer('service_time')->nullable();
             $table->enum('service_time_type', ['minutes', 'hours'])->nullable();
             $table->boolean('status')->default(true);
             $table->timestamps();

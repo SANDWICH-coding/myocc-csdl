@@ -89,12 +89,6 @@ class EventAttendanceController extends Controller
             $attendance->location = $attendance->location_coordinates;
             unset($attendance->location_coordinates);
 
-            if ($attendance->attended_at) {
-                $attendance->attended_at = Carbon::parse($attendance->attended_at, 'UTC')
-                    ->setTimezone('Asia/Manila')
-                    ->format('Y-m-d H:i:s');
-            }
-
             return $attendance;
         });
 

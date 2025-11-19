@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->foreignId('event_id')->constrained('events');
             $table->string('user_id_no');
             $table->string('checkpoint'); // e.g., 'start_time', 'end_time', 'first_start_time', etc.
-            $table->timestamp('attended_at');
+            $table->time('attended_at');
             $table->json('location_coordinates');
             $table->string('device_user_id_no');
             $table->string('device_model');
