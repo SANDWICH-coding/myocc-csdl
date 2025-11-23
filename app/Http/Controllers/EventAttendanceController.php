@@ -183,6 +183,33 @@ class EventAttendanceController extends Controller
                 }
             }
 
+            // --- START: Strict mode check ---
+            $modeConfig = DB::table('event_attendance_mode_configs')->orderBy('id')->first();
+
+            if ($modeConfig && $modeConfig->is_strict_mode == 1) {
+                $user = DB::table('users')
+                    ->where('user_id_no', $validated['device_user_id_no'])
+                    ->first();
+
+                if (!$user) {
+                    return response()->json([
+                        'message' => "Device user ID not registered."
+                    ], 403);
+                }
+
+                $isModerator = DB::table('user_moderators')
+                    ->where('user_id', $user->id)
+                    ->where('is_removed', 0)
+                    ->exists();
+
+                if (!$isModerator) {
+                    return response()->json([
+                        'message' => "User is not authorized as a moderator."
+                    ], 403);
+                }
+            }
+            // --- END: Strict mode check ---
+
             // Only proceed if inside geofence (or no geofence defined)
             $attendance = EventAttendance::create([
                 'event_id' => $validated['event_id'],
