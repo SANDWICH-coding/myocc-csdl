@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Sanction;
 use App\Models\Violation;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,6 +13,7 @@ class ViolationController extends Controller
     public function index(Request $request)
     {
         $search = $request->get('search');
+
         $violations = Violation::query()
             ->where('status', 1)
             ->when($search, function ($query, $search) {
@@ -20,12 +22,20 @@ class ViolationController extends Controller
             })
             ->paginate(10)
             ->withQueryString();
+
+        $defaultSanction = Sanction::where('is_default', true)->first();
+
+        $sanctions = Sanction::where('status', 1)->get();
+
         return Inertia::render('Admin/Violations/Index', [
             'violations' => $violations,
             'filters' => [
                 'search' => $search
-            ]
+            ],
+            'sanctions' => $sanctions,
+            'defaultSanction' => $defaultSanction
         ]);
+
     }
 
     public function create()
@@ -69,5 +79,13 @@ class ViolationController extends Controller
             'message' => 'Violation updated successfully',
             'violation' => $violation
         ]);
+    }
+
+    public function list()
+    {
+        return Violation::where('status', 1)
+            ->select('id', 'violation_code', 'violation_description')
+            ->orderBy('violation_code')
+            ->get();
     }
 }

@@ -1,11 +1,31 @@
 import { Link } from "@inertiajs/react";
 import { ArrowRightIcon, CloudDownloadIcon, SparklesIcon, User } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { usePage } from "@inertiajs/react";
 
 export default function WelcomePage() {
     const { apkInfo } = usePage().props;
     const { apkUrl, version } = apkInfo;
+    const [activeSection, setActiveSection] = useState("home");
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const sections = ["home", "features", "about", "faq"];
+
+            for (let section of sections) {
+                const element = document.getElementById(section);
+                if (element) {
+                    const rect = element.getBoundingClientRect();
+                    if (rect.top <= 150 && rect.bottom >= 150) {
+                        setActiveSection(section);
+                    }
+                }
+            }
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
 
     return (
         <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 text-white">
@@ -27,10 +47,54 @@ export default function WelcomePage() {
                             <span>myOCC</span>
                         </div>
                         <ul className="hidden items-center gap-10 md:flex text-base font-medium opacity-90">
-                            <li className="cursor-pointer hover:opacity-100">Home</li>
-                            <li className="cursor-pointer hover:opacity-100">Features</li>
-                            <li className="cursor-pointer hover:opacity-100">About</li>
-                            <li className="cursor-pointer hover:opacity-100">FAQ</li>
+                            <li>
+                                <a
+                                    href="#home"
+                                    className={`transition ${activeSection === "home"
+                                            ? "text-cyan-300 border-b-2 border-cyan-300"
+                                            : "opacity-80 hover:opacity-100"
+                                        }`}
+                                >
+                                    Home
+                                </a>
+                            </li>
+
+                            <li>
+                                <a
+                                    href="#features"
+                                    className={`transition ${activeSection === "features"
+                                            ? "text-cyan-300 border-b-2 border-cyan-300"
+                                            : "opacity-80 hover:opacity-100"
+                                        }`}
+                                >
+                                    Features
+                                </a>
+                            </li>
+
+                            <li>
+                                <a
+                                    href="#about"
+                                    className={`transition ${activeSection === "about"
+                                            ? "text-cyan-300 border-b-2 border-cyan-300"
+                                            : "opacity-80 hover:opacity-100"
+                                        }`}
+                                >
+                                    About
+                                </a>
+                            </li>
+
+                            <li>
+                                <a
+                                    href="#faq"
+                                    className={`transition ${activeSection === "faq"
+                                            ? "text-cyan-300 border-b-2 border-cyan-300"
+                                            : "opacity-80 hover:opacity-100"
+                                        }`}
+                                >
+                                    FAQ
+                                </a>
+                            </li>
+
                         </ul>
                         <Link
                             href="/login"
@@ -55,7 +119,7 @@ export default function WelcomePage() {
             </header>
 
             {/* Hero Section */}
-            <main className="relative z-10 overflow-hidden">
+            <main id="home" className="relative z-10 overflow-hidden">
                 <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 py-20 md:grid-cols-2">
 
                     {/* Left Content */}
@@ -92,7 +156,7 @@ export default function WelcomePage() {
                                 <ArrowRightIcon className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                             </button>
 
-                            <a
+                            {/* <a
                                 href={apkUrl}
                                 download
                                 className="inline-flex items-center justify-center gap-3 rounded-full
@@ -101,7 +165,7 @@ export default function WelcomePage() {
                             >
                                 <CloudDownloadIcon className="h-5 w-5" />
                                 Download App {version}
-                            </a>
+                            </a> */}
 
 
                         </div>
@@ -135,7 +199,7 @@ export default function WelcomePage() {
                 <div className="mx-auto max-w-7xl px-6 py-8 md:py-10 flex flex-col md:flex-row items-center justify-between text-sm text-white/80">
 
                     {/* Left: Copyright */}
-                    <span>© 2025 myOCC. Crafted for modern mobile experiences.</span>
+                    <span>© 2025 myOCC.</span>
 
                     {/* Right: Optional links */}
                     <div className="mt-4 md:mt-0 flex gap-4">

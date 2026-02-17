@@ -34,4 +34,9 @@ class User extends Authenticatable
     {
         return $this->user_role === 'student';
     }
+
+    public function setUserIdNoAttribute($value)
+    {
+        $this->attributes['user_id_no'] = strtoupper($value);
+    }
 }

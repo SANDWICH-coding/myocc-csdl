@@ -73,7 +73,7 @@ export default function Update({ auth, violation, onSuccess }) {
                     type="text"
                     value={data.violation_code}
                     onChange={(e) => setData({ ...data, violation_code: e.target.value })}
-                    className={`w-full px-3.5 py-2.5 text-sm text-gray-900 bg-white border ${errors.violation_code ? 'border-red-300' : 'border-gray-300'
+                    className={`w-full px-3.5 uppercase placeholder:normal-case py-2.5 text-sm text-gray-900 bg-white border ${errors.violation_code ? 'border-red-300' : 'border-gray-300'
                         } rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder:text-gray-400`}
                     placeholder="Enter violation code"
                 />

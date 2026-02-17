@@ -25,11 +25,15 @@
         "@mapbox/mapbox-gl-draw": "^1.5.1",
         "@mapbox/mapbox-gl-geocoder": "^5.1.2",
         "framer-motion": "^12.23.26",
+        "html5-qrcode": "^2.3.8",
         "lucide-react": "^0.560.0",
         "mapbox-gl": "^3.17.0",
+        "qrcode.react": "^4.2.0",
         "react": "^19.2.1",
+        "react-countup": "^6.5.3",
         "react-dom": "^19.2.1",
         "react-hot-toast": "^2.6.0",
+        "recharts": "^3.7.0",
         "ziggy-js": "^2.6.0"
     }
 }

@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'sis' => [
+        'url' => env('API_ENROLLMENT_SYSTEM_URL'),
+        'user_id' => env('API_ENROLLMENT_SYSTEM_USER'),
+        'password' => env('API_ENROLLMENT_SYSTEM_PASSWORD'),
+    ],
+
 ];

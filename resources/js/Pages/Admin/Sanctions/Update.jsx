@@ -84,7 +84,7 @@ export default function Update({ sanction, onSuccess }) {
                     type="text"
                     value={data.sanction_name}
                     onChange={e => setData({ ...data, sanction_name: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full uppercase placeholder:normal-case px-3 py-2 border rounded-lg"
                 />
                 {errors.sanction_name && <p className="text-red-600 text-sm">{errors.sanction_name[0]}</p>}
             </div>

@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, usePage, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import {
     HomeIcon,
@@ -7,11 +7,13 @@ import {
     ChevronRightIcon,
     ChevronLeftIcon,
 } from '@heroicons/react/24/outline';
-import { CalendarRange, LayoutDashboard, ListTodo, ListX, MapPinned, Users } from 'lucide-react';
+import { CalendarRange, LayoutDashboard, ListTodo, ListX, MapPinned, ScanQrCode, Ticket, Tickets, Users } from 'lucide-react';
+import { Loader } from 'lucide-react';
 
 export default function Sidebar({ user, mobileOpen, setMobileOpen }) {
     const { url } = usePage();
     const [collapsed, setCollapsed] = useState(false);
+    const [loadingHref, setLoadingHref] = useState(null);
 
     // Persist collapsed state
     useEffect(() => {
@@ -24,6 +26,28 @@ export default function Sidebar({ user, mobileOpen, setMobileOpen }) {
         setCollapsed(newCollapsed);
         localStorage.setItem('sidebar-collapsed', newCollapsed);
     };
+
+    useEffect(() => {
+        const removeStart = router.on('start', (event) => {
+            setLoadingHref(event.detail.visit.url.pathname);
+        });
+
+        const removeFinish = router.on('finish', () => {
+            setLoadingHref(null);
+        });
+
+        const removeError = router.on('error', () => {
+            setLoadingHref(null);
+        });
+
+        return () => {
+            removeStart();
+            removeFinish();
+            removeError();
+        };
+    }, []);
+
+
 
     const role = user?.user_role || 'guest';
     let links = [];
@@ -47,12 +71,18 @@ export default function Sidebar({ user, mobileOpen, setMobileOpen }) {
                 items: [
                     { name: 'Events', href: '/manage-event', icon: CalendarRange },
                     { name: 'Users', href: '/manage-user', icon: Users },
+                    { name: 'Violation Records', href: '/manage-violation-records', icon: Tickets },
                 ],
             },
         ];
     } else if (role === 'security') {
         links = [
-            { name: 'Dashboard', href: '/security/dashboard', icon: HomeIcon },
+            {
+                label: 'Menu',
+                items: [
+                    { name: 'Dashboard', href: '/security/dashboard', icon: LayoutDashboard },
+                ],
+            },
             { name: 'Violations', href: '/security/violations', icon: CheckIcon },
         ];
     } else if (role === 'student') {
@@ -60,8 +90,14 @@ export default function Sidebar({ user, mobileOpen, setMobileOpen }) {
             {
                 label: 'Menu',
                 items: [
-                    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-                    { name: 'Profile', href: '/student/profile', icon: UserGroupIcon },
+                    { name: 'Home', href: '/student/dashboard', icon: HomeIcon },
+                ],
+            },
+
+            {
+                label: 'Records',
+                items: [
+                    { name: 'Violation', href: '/student/violations', icon: Tickets },
                 ],
             },
         ];
@@ -131,22 +167,32 @@ export default function Sidebar({ user, mobileOpen, setMobileOpen }) {
                             {group.items?.map((link) => {
                                 const Icon = link.icon;
                                 const isActive = url.startsWith(link.href);
+                                const isLoading = loadingHref === link.href;
 
                                 return (
                                     <Link
                                         key={link.href}
                                         href={link.href}
-                                        onClick={() => setMobileOpen(false)}
+                                        onClick={() => {
+                                            setMobileOpen(false);
+                                            setLoadingHref(link.href);
+                                        }}
                                         className={`flex items-center transition-colors rounded-lg ml-4 mr-4
-                                        ${collapsed ? 'justify-center px-0 py-3' : 'justify-start px-4 py-3'}
-                                        ${isActive ? 'bg-blue-700 text-white' : 'text-gray-700 hover:bg-blue-100 hover:text-blue-700'}
-                                        `}
+            ${collapsed ? 'justify-center px-0 py-3' : 'justify-start px-4 py-3'}
+            ${isActive ? 'bg-blue-700 text-white' : 'text-gray-700 hover:bg-blue-100 hover:text-blue-700'}
+            `}
                                     >
-                                        <Icon className={`h-6 w-6 ${isActive ? 'text-white' : 'text-gray-700'}`} />
+                                        {isLoading ? (
+                                            <Loader className="h-6 w-6 animate-spin" />
+                                        ) : (
+                                            <Icon className={`h-6 w-6 ${isActive ? 'text-white' : 'text-gray-700'}`} />
+                                        )}
+
                                         {!collapsed && <span className="ml-3">{link.name}</span>}
                                     </Link>
                                 );
                             })}
+
                         </div>
                     ))}
                 </nav>

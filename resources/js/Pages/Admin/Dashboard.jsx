@@ -1,14 +1,67 @@
+import { useEffect, useState } from 'react';
 import AppLayout from '../../Layouts/AppLayout';
+import StatsBarChart from '../../Components/StatsBarChart';
+import DashboardStats from '../../Components/DashboardStats';
 
-export default function Dashboard({ auth }) {
+export default function Dashboard({
+    auth,
+    totalUsers,
+    unsettledViolations,
+    violationChartData
+}) {
+
     const user = auth?.user;
+    const colors = ["#2563eb", "#f97316", "#dc2626", "#10b981", "#efef04", "#8b5cf6"];
 
     return (
-        <AppLayout user={user}>
-            <h1 className="text-2xl md:text-3xl font-bold mb-4">Admin Dashboard</h1>
-            <p className="text-sm md:text-base">
-                Welcome to your dashboard, {user?.user_id_no || 'Guest'}!
-            </p>
+        <AppLayout user={user} breadcrumbs={["Dashboard"]}>
+            <div className="container px-3 py-4 space-y-6">
+
+                {/* HEADER */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 text-center sm:text-left">
+                        <img
+                            src="/assets/images/school-logo.png"
+                            alt="Opol Community College Logo"
+                            className="img-fluid"
+                            style={{ width: '64px' }}
+                        />
+                        <div className="leading-tight">
+                            <div className="fw-semibold text-gray-800 text-base">
+                                Opol Community College
+                            </div>
+                            <div className="uppercase text-gray-500 font-medium text-xs border-t border-gray-300 mt-1 pt-1">
+                                Center for Student Development and Leadership
+                            </div>
+                            <div className="text-sm text-gray-600 font-bold tracking-tight">
+                                Office of the CSDL
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* STATISTICS */}
+                <DashboardStats
+                    totalUsers={totalUsers}
+                    unsettledViolations={unsettledViolations}
+                />
+
+                {/* CHART */}
+                <div className="space-y-2">
+                    <div className="fw-semibold text-sm md:text-base text-gray-700">
+                        Violation Code Statistics
+                    </div>
+                    <div className="border rounded-lg shadow-xs bg-white p-3 md:p-4">
+                        <StatsBarChart
+                            data={violationChartData}
+                            xKey="violation_code"
+                            barKey="count"
+                            height={320}
+                            colors={colors}
+                        />
+                    </div>
+                </div>
+            </div>
         </AppLayout>
     );
 }

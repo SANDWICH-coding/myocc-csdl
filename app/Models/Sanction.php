@@ -13,11 +13,17 @@ class Sanction extends Model
         'monetary_amount',
         'service_time',
         'service_time_type',
+        'is_default',
         'status'
     ];
 
     public function events()
     {
         return $this->hasMany(Event::class);
+    }
+
+    public function setSanctionNameAttribute($value)
+    {
+        $this->attributes['sanction_name'] = strtoupper($value);
     }
 }

@@ -1,31 +1,40 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\SanctionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ViolationController;
 use App\Http\Controllers\AuthController;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-use Inertia\Inertia;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\UserViolationRecordController;
+use App\Http\Controllers\UserProfileController;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\File;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 // PUBLIC
 Route::get('/login', [LoginController::class, 'show'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.attempt');
 
+Route::get('/register', [LoginController::class, 'registerShowForm'])->name('register');
+Route::post('/register', [LoginController::class, 'register'])->name('register.submit');
+
+
 // AUTH ONLY
 Route::middleware(['auth'])->group(function () {
 
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    Route::get('/profile', [UserProfileController::class, 'index'])->name('profile.index');
+    Route::get('/student-profile', [UserProfileController::class, 'studentProfile'])->name('profile.student');
+    Route::post('/profile/avatar', [UserProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::post('/profile/change-password', [UserProfileController::class, 'changePassword'])->name('profile.password.change');
 
     // ADMIN AREA
     Route::middleware('role:admin')->group(function () {
-        Route::get('/admin/dashboard', function () {
-            return Inertia::render('Admin/Dashboard');
-        })->name('admin.dashboard');
+        Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 
         Route::get('/setup-violation', [ViolationController::class, 'index'])->name('setup.violation.index');
         Route::get('/setup/violation/create', [ViolationController::class, 'create'])->name('setup.violation.create');
@@ -35,6 +44,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/setup-sanction', [SanctionController::class, 'index'])->name('setup.sanction.index');
         Route::post('/setup/sanction/store', [SanctionController::class, 'store'])->name('setup.sanction.store');
         Route::patch('/setup/sanction/{sanction}', [SanctionController::class, 'update'])->name('setup.sanction.update');
+        Route::patch('/sanctions/{id}/set-default', [SanctionController::class, 'updateDefault'])->name('sanctions.setDefault');
 
         Route::get('/setup-location', [LocationController::class, 'index'])->name('setup.location.index');
         Route::post('/setup/location/store', [LocationController::class, 'store'])->name('setup.location.store');
@@ -46,22 +56,37 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/event/{event}/edit', [EventController::class, 'edit'])->name('manage.event.edit');
         Route::put('/event/{event}', [EventController::class, 'update'])->name('manage.event.update');
 
-        Route::get('/manage-user', [UserController::class, 'index'])->name('manage.user.index');
+        Route::get('/manage-user', action: [UserController::class, 'index'])->name('manage.user.index');
+        Route::post('/manage-user/store', [UserController::class, 'store'])->name('manage.user.store');
+        Route::get('/admin/student-enrollment', [UserController::class, 'getStudentEnrollmentAPI']);
+
+        Route::get('/manage-violation-records', [UserViolationRecordController::class, 'allUserViolationRecordsIndex'])->name('admin.userViolationRecords.index');
+        Route::put('/manage-violation-records/{id}/update-status', [UserViolationRecordController::class, 'updateStatus'])
+            ->name('admin.userViolationRecords.updateStatus');
 
     });
 
     // SECURITY AREA
     Route::middleware('role:security')->group(function () {
-        Route::get('/security/dashboard', function () {
-            return Inertia::render('Security/Dashboard');
-        })->name('security.dashboard');
+        Route::get('/security/dashboard', [\App\Http\Controllers\Security\DashboardController::class, 'index'])->name('security.dashboard');
+
+        Route::get('/security/get-user-details', [UserController::class, 'getUserDetailsAPI']);
+        Route::get('/security/violations', [ViolationController::class, 'list'])
+            ->name('violations.list');
+
+        Route::post('/security/violation-store', [UserViolationRecordController::class, 'store'])
+            ->name('violations.store');
     });
 
     // STUDENT AREA
     Route::middleware('role:student')->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Student/Dashboard');
-        })->name('student.dashboard');
+        Route::get('/student/dashboard', [\App\Http\Controllers\Student\DashboardController::class, 'index'])->name('student.dashboard');
+        Route::get('/student/violations', [UserViolationRecordController::class, 'userViolationRecordsIndex'])->name('student.violations.index');
+        Route::get(
+            '/student/violations/print',
+            [UserViolationRecordController::class, 'printUnsettled']
+        )->name('student.violations.print');
+
     });
 
 });

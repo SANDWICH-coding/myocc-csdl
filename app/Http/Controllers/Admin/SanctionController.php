@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Sanction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class SanctionController extends Controller
@@ -127,6 +128,22 @@ class SanctionController extends Controller
             'message' => 'Sanction updated successfully',
             'sanction' => $sanction
         ]);
+    }
+
+    public function updateDefault($id)
+    {
+        $sanction = Sanction::findOrFail($id);
+
+        DB::transaction(function () use ($sanction) {
+            if (!$sanction->is_default) {
+                Sanction::where('is_default', true)
+                    ->update(['is_default' => false]);
+
+                $sanction->update(['is_default' => true]);
+            }
+        });
+
+        return back(303); 
     }
 
 }

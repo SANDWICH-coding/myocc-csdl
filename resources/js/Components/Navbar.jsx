@@ -1,31 +1,16 @@
-import { Bars3Icon, BellIcon, UserCircleIcon } from '@heroicons/react/24/outline';
-import { usePage } from '@inertiajs/react';
+import { Bars3Icon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import { router } from '@inertiajs/react';
 
 export default function Navbar({ user, onMobileMenu, breadcrumbs = [] }) {
-    // Breadcrumbs items
-    const breadcrumbItems = breadcrumbs.map((item, index) => (
-        <span key={index} className="text-gray-600">
-            {item}
-            {index < breadcrumbs.length - 1 && <span className="mx-2">/</span>}
-        </span>
-    ));
-
-    // Notification dropdown
-    const [openNotif, setOpenNotif] = useState(false);
-    const notifRef = useRef(null);
-
-    // Profile dropdown
     const [openProfile, setOpenProfile] = useState(false);
     const profileRef = useRef(null);
 
-    // Close dropdowns when clicking outside
+    const { url } = usePage();
+    const isProfileActive = url.startsWith('/profile');
+
     useEffect(() => {
         function handleClickOutside(event) {
-            if (notifRef.current && !notifRef.current.contains(event.target)) {
-                setOpenNotif(false);
-            }
             if (profileRef.current && !profileRef.current.contains(event.target)) {
                 setOpenProfile(false);
             }
@@ -34,96 +19,109 @@ export default function Navbar({ user, onMobileMenu, breadcrumbs = [] }) {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const breadcrumbItems = breadcrumbs.map((item, index) => (
+        <span key={index} className="text-gray-600">
+            {item}
+            {index < breadcrumbs.length - 1 && <span className="mx-2">/</span>}
+        </span>
+    ));
+
     return (
-        <nav className="bg-white border-b-2 px-4 py-3 flex items-center justify-between w-full sticky top-0 z-20">
-            {/* LEFT SIDE: Hamburger + Breadcrumbs */}
-            <div className="flex items-center space-x-3">
-                <button
-                    className="lg:hidden p-1 hover:bg-gray-200 rounded"
-                    onClick={onMobileMenu}
-                >
-                    <Bars3Icon className="h-6 w-6 text-gray-700" />
-                </button>
-
-                {/* Breadcrumbs Desktop */}
-                <div className="hidden sm:flex text-sm uppercase font-regular text-gray-700 tracking-wider">
-                    {breadcrumbItems.length > 0 ? breadcrumbItems : <span className="text-gray-600">Dashboard</span>}
-                </div>
-
-                {/* Breadcrumb Mobile */}
-                <div className="sm:hidden text-xs font-thin text-gray-700 uppercase tracking-wide">
-                    {breadcrumbs[breadcrumbs.length - 1] || "Dashboard"}
-                </div>
-            </div>
-
-            {/* RIGHT SIDE */}
-            <div className="flex items-center space-x-4">
-                {/* Notifications */}
-                {/* <div className="relative" ref={notifRef}>
-                    <button
-                        className="relative p-2 rounded hover:bg-gray-100"
-                        onClick={() => setOpenNotif(!openNotif)}
+        <>
+            {/* ================= DESKTOP NAVBAR ================= */}
+            <nav className="hidden lg:flex bg-white border-b px-6 py-3 items-center justify-between sticky top-0 z-20">
+                {/* Left */}
+                <div className="flex items-center space-x-3">
+                    {/* <button
+                        className="p-1 hover:bg-gray-200 rounded"
+                        onClick={onMobileMenu}
                     >
-                        <BellIcon className="h-6 w-6 text-gray-700" />
-                        <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-                    </button>
+                        <Bars3Icon className="h-6 w-6 text-gray-700" />
+                    </button> */}
 
-                    {openNotif && (
-                        <div className="absolute right-0 mt-2 w-64 bg-white shadow-lg rounded-lg border z-30 animate-fadein">
-                            <div className="p-3 border-b font-semibold text-gray-700">
-                                Notifications
-                            </div>
-                            <div className="p-3 hover:bg-gray-50 cursor-pointer">
-                                <p className="text-sm text-gray-800">You have a new message.</p>
-                                <span className="text-xs text-gray-500">2 min ago</span>
-                            </div>
-                            <div className="p-3 hover:bg-gray-50 cursor-pointer">
-                                <p className="text-sm text-gray-800">System update completed.</p>
-                                <span className="text-xs text-gray-500">1 hour ago</span>
-                            </div>
-                            <div className="p-3 hover:bg-gray-50 cursor-pointer text-center text-blue-600 text-sm">
-                                View all notifications
-                            </div>
-                        </div>
-                    )}
-                </div> */}
+                    <div className="text-sm uppercase tracking-wider">
+                        {breadcrumbItems.length > 0
+                            ? breadcrumbItems
+                            : <span>Dashboard</span>}
+                    </div>
+                </div>
 
-                {/* Profile Avatar */}
+                {/* Right */}
                 <div className="relative" ref={profileRef}>
                     <button
-                        className="flex items-center rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        className="flex items-center rounded-full"
                         onClick={() => setOpenProfile(!openProfile)}
                     >
                         {user?.profile_photo ? (
                             <img
                                 src={`/storage/${user.profile_photo}`}
                                 alt="User Avatar"
-                                className="h-8 w-8 rounded-full object-cover"
+                                className="h-9 w-9 ring ring-gray-300 rounded-full object-cover"
                             />
                         ) : (
-                            <UserCircleIcon className="h-8 w-8 text-gray-700" />
+                            <UserCircleIcon className="h-9 w-9 text-gray-700" />
                         )}
                     </button>
 
-
                     {openProfile && (
-                        <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-lg border z-30 animate-fadein">
+                        <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-lg border z-30">
                             <button
                                 onClick={() => router.visit('/profile')}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700 rounded-t"
+                                className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${
+                                    isProfileActive ? 'bg-indigo-50 text-indigo-600 font-medium' : ''
+                                }`}
                             >
                                 Profile
                             </button>
                             <button
                                 onClick={() => router.post('/logout')}
-                                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600 rounded-b"
+                                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
                             >
                                 Logout
                             </button>
                         </div>
                     )}
                 </div>
+            </nav>
+
+            {/* ================= MOBILE BOTTOM TAB ================= */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t shadow-md z-40">
+                <div className="flex justify-around items-center py-2">
+
+                    {/* MENU TAB */}
+                    <button
+                        onClick={onMobileMenu}
+                        className="flex flex-col items-center text-gray-600 hover:text-indigo-600"
+                    >
+                        <Bars3Icon className="h-6 w-6" />
+                        <span className="text-xs mt-1">Menu</span>
+                    </button>
+
+                    {/* PROFILE TAB */}
+                    <button
+                        onClick={() => router.visit('/profile')}
+                        className={`flex flex-col items-center transition ${
+                            isProfileActive
+                                ? 'text-indigo-600'
+                                : 'text-gray-600 hover:text-indigo-600'
+                        }`}
+                    >
+                        {user?.profile_photo ? (
+                            <img
+                                src={`/storage/${user.profile_photo}`}
+                                alt="User Avatar"
+                                className={`h-7 w-7 rounded-full ring-2 ring-gray-100 object-cover ${
+                                    isProfileActive ? 'ring-2 ring-indigo-500' : ''
+                                }`}
+                            />
+                        ) : (
+                            <UserCircleIcon className="h-7 w-7" />
+                        )}
+                        <span className="text-xs mt-1">Profile</span>
+                    </button>
+
+                </div>
             </div>
-        </nav>
+        </>
     );
 }

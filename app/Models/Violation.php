@@ -11,4 +11,9 @@ class Violation extends Model
         'violation_description',
         'status',
     ];
+
+    public function setViolationCodeAttribute($value)
+    {
+        $this->attributes['violation_code'] = strtoupper($value);
+    }
 }

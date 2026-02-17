@@ -9,6 +9,7 @@ export default function DataTable({
     onSearch,
     actions,
     searchPlaceholder = "Search...",
+    total,
 }) {
     const [searchValue, setSearchValue] = useState(search || "");
 
@@ -33,7 +34,7 @@ export default function DataTable({
     const hasData = data?.data && data.data.length > 0;
 
     return (
-        <div className="bg-white shadow-md rounded-lg p-4">
+        <div className="bg-white shadow-sm border rounded-lg p-4">
             {/* Search Bar */}
             <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 mb-6">
                 <input
@@ -53,30 +54,51 @@ export default function DataTable({
             {hasData ? (
                 <>
                     {/* Desktop Table */}
-                    <div className="overflow-x-auto rounded-md border border-gray-200 hidden lg:block">
-                        <table className="w-full border-collapse">
-                            <thead>
-                                <tr className="bg-gray-50 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                                    {columns.map((col) => (
-                                        <th key={col.key} className="py-3 px-6">{col.label}</th>
-                                    ))}
-                                    {actions && <th className="py-3 px-6 text-right">Actions</th>}
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {data.data.map((row) => (
-                                    <tr key={row.id} className="hover:bg-gray-50 transition">
+                    <div className="hidden lg:block">
+                        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+                            <table className="min-w-max w-full border-collapse">
+                                <thead className="bg-gray-50">
+                                    <tr className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                         {columns.map((col) => (
-                                            <td key={col.key} className="py-4 px-6 text-sm">
-                                                {col.render ? col.render(row) : row[col.key]}
-                                            </td>
+                                            <th
+                                                key={col.key}
+                                                className="px-6 py-3 whitespace-nowrap"
+                                            >
+                                                {col.label}
+                                            </th>
                                         ))}
-                                        {actions && <td className="py-4 px-6 text-right">{actions(row)}</td>}
+                                        {actions && (
+                                            <th className="px-6 py-3 text-right whitespace-nowrap">
+                                                Actions
+                                            </th>
+                                        )}
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+
+                                <tbody className="divide-y divide-gray-200 bg-white">
+                                    {data.data.map((row) => (
+                                        <tr key={row.id} className="hover:bg-gray-50 transition">
+                                            {columns.map((col) => (
+                                                <td
+                                                    key={col.key}
+                                                    className="px-6 py-4 text-sm text-gray-700 whitespace-nowrap"
+                                                >
+                                                    {col.render ? col.render(row) : row[col.key]}
+                                                </td>
+                                            ))}
+
+                                            {actions && (
+                                                <td className="px-6 py-4 text-right whitespace-nowrap">
+                                                    {actions(row)}
+                                                </td>
+                                            )}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+
 
                     {/* Mobile Cards */}
                     <div className="lg:hidden space-y-4">
@@ -99,30 +121,43 @@ export default function DataTable({
 
                     {/* Pagination */}
                     {data.links && data.links.length > 3 && (
-                        <div className="mt-6 flex flex-wrap justify-center gap-1">
-                            {data.links.map((link, i) => {
-                                const isDisabled = !link.url;
-                                const isActive = link.active;
+                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
 
-                                return (
-                                    <button
-                                        key={i}
-                                        disabled={isDisabled}
-                                        onClick={() => !isDisabled && handlePaginationClick(link.url)}
-                                        className={`
-                                            px-3 py-1.5 min-w-[36px] text-sm rounded border transition
-                                            ${isActive
-                                                ? "bg-blue-600 text-white border-blue-600"
-                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                                            }
-                                            ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}
-                                        `}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                );
-                            })}
+                            {/* Showing Info */}
+                            <div className="text-sm text-gray-600">
+                                Showing{" "}
+                                <span className="font-medium">{data.from}</span> to{" "}
+                                <span className="font-medium">{data.to}</span> of{" "}
+                                <span className="font-medium">{data.total}</span> results
+                            </div>
+
+                            {/* Pagination Buttons */}
+                            <div className="flex items-center gap-1">
+                                {data.links.map((link, i) => {
+                                    const isDisabled = !link.url;
+                                    const isActive = link.active;
+
+                                    return (
+                                        <button
+                                            key={i}
+                                            disabled={isDisabled}
+                                            onClick={() => !isDisabled && handlePaginationClick(link.url)}
+                                            className={`
+              px-3 py-2 text-sm rounded-md border transition
+              ${isActive
+                                                    ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                                                }
+              ${isDisabled ? "opacity-40 cursor-not-allowed" : ""}
+            `}
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
+
                 </>
             ) : (
                 <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">

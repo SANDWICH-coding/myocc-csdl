@@ -20,6 +20,8 @@ use Illuminate\Http\Request;
 
 Route::post('/login', [AuthController::class, 'login']);
 
+
+
 Route::middleware('auth:sanctum')->get('/check-strict-mode', function (Request $request) {
     $user = $request->user();
 

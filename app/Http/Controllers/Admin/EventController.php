@@ -12,20 +12,18 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
+use App\Services\SisApiService;
 
 class EventController extends Controller
 {
 
-    public function index()
+    public function index(SisApiService $sisApi)
     {
-        // 1. Fetch all active events
         $events = Event::where('status', true)
             ->orderBy('event_date', 'desc')
             ->get();
 
-        // 2. Fetch school structure from external API
-        $response = Http::withToken(env('API_ENROLLMENT_SYSTEM_TOKEN'))
-            ->get(env('API_ENROLLMENT_SYSTEM_URL') . '/api/school-structure');
+        $response = $sisApi->get('/api/school-structure');
 
         if (!$response->ok()) {
             return response()->json([

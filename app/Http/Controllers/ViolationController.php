@@ -10,10 +10,11 @@ class ViolationController extends Controller
     // Fetch only active violations
     public function index()
     {
+
         $violations = Violation::where('status', 1)->get();
         return response()->json([
             'message' => 'Active violations retrieved successfully',
-            'violations' => $violations
+            'violations' => $violations,
         ]);
     }
 

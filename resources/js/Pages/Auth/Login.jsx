@@ -17,7 +17,7 @@ export default function Login() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl w-full bg-white shadow-xl rounded-3xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
+            <div className="max-w-4xl w-full bg-white shadow-sm border rounded-md overflow-hidden grid grid-cols-1 md:grid-cols-2">
                 {/* Left Column (Illustration / Info) */}
                 <div className="hidden md:flex flex-col justify-center items-center bg-gradient-to-b from-blue-600 to-indigo-600 text-white p-10">
                     <img src="/favicon.png" alt="Logo" className="h-20 w-20 object-contain mb-6" />
@@ -52,7 +52,7 @@ export default function Login() {
                                     required
                                     value={data.user_id_no}
                                     onChange={e => setData('user_id_no', e.target.value)}
-                                    className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                                    className="mt-1 uppercase placeholder:normal-case block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                                     placeholder="Enter your ID Number"
                                 />
                                 {errors.user_id_no && (

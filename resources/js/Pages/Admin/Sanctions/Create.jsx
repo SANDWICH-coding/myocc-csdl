@@ -95,7 +95,7 @@ export default function Create({ onSuccess }) {
                         setData({ ...data, sanction_name: e.target.value })
                     }
                     placeholder="Enter sanction name"
-                    className={`w-full px-3.5 py-2.5 text-sm border rounded-lg ${errors.sanction_name ? "border-red-300" : "border-gray-300"
+                    className={`w-full px-3.5 uppercase placeholder:normal-case py-2.5 text-sm border rounded-lg ${errors.sanction_name ? "border-red-300" : "border-gray-300"
                         }`}
                 />
                 {errors.sanction_name && (
