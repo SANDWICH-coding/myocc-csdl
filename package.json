@@ -25,6 +25,7 @@
         "@mapbox/mapbox-gl-draw": "^1.5.1",
         "@mapbox/mapbox-gl-geocoder": "^5.1.2",
         "framer-motion": "^12.23.26",
+        "html2canvas": "^1.4.1",
         "html5-qrcode": "^2.3.8",
         "lucide-react": "^0.560.0",
         "mapbox-gl": "^3.17.0",

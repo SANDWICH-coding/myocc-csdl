@@ -1,13 +1,14 @@
 import { useState } from "react";
 import axios from "axios";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 
-export default function Create({ auth, onSuccess }) {
+export default function Create({ onSuccess }) {
     const [data, setData] = useState({
         violation_code: "",
         violation_description: "",
         status: true,
     });
+
     const [errors, setErrors] = useState({});
     const [processing, setProcessing] = useState(false);
 
@@ -16,27 +17,31 @@ export default function Create({ auth, onSuccess }) {
         setProcessing(true);
         setErrors({});
 
-        const promise = axios.post(route("setup.violation.store"), data);
+        // Use relative URL so it works in production
+        const promise = axios.post("/setup/violation", data);
 
         toast.promise(promise, {
-            loading: 'Creating violation...',
-            success: 'Violation created successfully!',
-            error: 'Failed to create violation',
+            loading: "Creating violation...",
+            success: "Violation created successfully!",
+            error: "Failed to create violation",
         });
 
         try {
             await promise;
-            onSuccess?.();
+
+            onSuccess?.(); // auto-close modal + refresh table
+
+            // Reset form
             setData({
                 violation_code: "",
                 violation_description: "",
                 status: true,
             });
+
         } catch (error) {
             if (error.response?.status === 422) {
                 setErrors(error.response.data.errors);
             } else {
-                // Optional: show more specific error if needed
                 console.error(error);
             }
         } finally {
@@ -46,48 +51,65 @@ export default function Create({ auth, onSuccess }) {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
+
+            {/* VIOLATION CODE */}
             <div>
-                <label htmlFor="violation_code" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Violation Code
                 </label>
                 <input
-                    id="violation_code"
                     type="text"
                     value={data.violation_code}
-                    onChange={(e) => setData({ ...data, violation_code: e.target.value })}
-                    className={`w-full uppercase placeholder:normal-case px-3.5 py-2.5 text-sm text-gray-900 bg-white border ${errors.violation_code ? 'border-red-300' : 'border-gray-300'
-                        } rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder:text-gray-400`}
+                    onChange={(e) =>
+                        setData({ ...data, violation_code: e.target.value })
+                    }
                     placeholder="Enter violation code"
+                    className={`w-full px-3.5 uppercase placeholder:normal-case py-2.5 text-sm border rounded-lg ${errors.violation_code ? "border-red-300" : "border-gray-300"
+                        }`}
                 />
                 {errors.violation_code && (
-                    <p className="mt-1.5 text-sm text-red-600">{errors.violation_code[0]}</p>
+                    <p className="text-red-600 text-sm mt-1.5">
+                        {errors.violation_code[0]}
+                    </p>
                 )}
             </div>
 
+            {/* DESCRIPTION */}
             <div>
-                <label htmlFor="violation_description" className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Description
                 </label>
                 <textarea
-                    id="violation_description"
-                    value={data.violation_description}
-                    onChange={(e) => setData({ ...data, violation_description: e.target.value })}
                     rows={4}
-                    className={`w-full px-3.5 py-2.5 text-sm text-gray-900 bg-white border ${errors.violation_description ? 'border-red-300' : 'border-gray-300'
-                        } rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder:text-gray-400`}
-                    placeholder="Describe the violation"
+                    value={data.violation_description}
+                    onChange={(e) =>
+                        setData({ ...data, violation_description: e.target.value })
+                    }
+                    placeholder="Optional description"
+                    className={`w-full px-3.5 py-2.5 text-sm border rounded-lg ${errors.violation_description ? "border-red-300" : "border-gray-300"
+                        }`}
                 />
                 {errors.violation_description && (
-                    <p className="mt-1.5 text-sm text-red-600">{errors.violation_description[0]}</p>
+                    <p className="text-red-600 text-sm mt-1.5">
+                        {errors.violation_description[0]}
+                    </p>
                 )}
             </div>
+
+            {/* STATUS */}
+            <input
+                type="checkbox"
+                hidden
+                checked={data.status}
+                onChange={(e) => setData({ ...data, status: e.target.checked })}
+            />
 
             <button
                 type="submit"
                 disabled={processing}
-                className="w-full px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg shadow-sm hover:bg-blue-700 transition disabled:opacity-50"
             >
-                {processing ? 'Saving...' : 'Save Violation'}
+                {processing ? "Saving..." : "Save Violation"}
             </button>
         </form>
     );

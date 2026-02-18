@@ -14,9 +14,22 @@
             margin-bottom: 20px;
         }
 
-        .title {
+        .title-top {
+            font-size: 15px;
+        }
+
+        .title-mid {
+            font-size: 12px;
+            padding-top: 5px;
+            margin-top: 5px;
+            padding-bottom: 5px;
+            border-top: #232323 solid 1px;
+            border-bottom: #232323 solid 1px;
+        }
+
+        .title-bot {
             font-weight: bold;
-            font-size: 16px;
+            font-size: 13px;
         }
 
         table {
@@ -53,9 +66,9 @@
                 </td>
 
                 <td width="60%" style="text-align: center; border: none;">
-                    <div class="title">OPOL COMMUNITY COLLEGE</div>
-                    <div>Center for Student Development and Leadership</div>
-                    <div>Office of the CSDL</div>
+                    <div class="title-top">Opol Community College</div>
+                    <div class="title-mid">CENTER FOR STUDENT DEVELOPMENT AND LEADERSHIP</div>
+                    <div class="title-bot">Office of the CSDL</div>
                 </td>
 
                 <td width="20%" style="text-align: left; border: none;">
@@ -95,16 +108,16 @@
                             @foreach($row->violation_codes as $code)
                                 <span
                                     style="
-                                                                                                                                                                        display: inline-block;
-                                                                                                                                                                        color: #1d4ed8;
-                                                                                                                                                                        font-weight: bold;
-                                                                                                                                                                        background-color: #dbeafe;
-                                                                                                                                                                        padding: 3px 8px;
-                                                                                                                                                                        margin: 2px 2px 2px 0;
-                                                                                                                                                                        border-radius: 12px;
-                                                                                                                                                                        border: 1px solid #93c5fd;
-                                                                                                                                                                        font-size: 10px;
-                                                                                                                                                                    ">
+                                                                                                                                                                                                            display: inline-block;
+                                                                                                                                                                                                            color: #1d4ed8;
+                                                                                                                                                                                                            font-weight: bold;
+                                                                                                                                                                                                            background-color: #dbeafe;
+                                                                                                                                                                                                            padding: 3px 8px;
+                                                                                                                                                                                                            margin: 2px 2px 2px 0;
+                                                                                                                                                                                                            border-radius: 12px;
+                                                                                                                                                                                                            border: 1px solid #93c5fd;
+                                                                                                                                                                                                            font-size: 10px;
+                                                                                                                                                                                                        ">
                                     {{ $code }}
                                 </span>
                             @endforeach
@@ -119,13 +132,13 @@
                             @if($row->sanction->sanction_type === 'monetary')
                                 <span
                                     style="
-                                                                                                                                                                                                                                    color: #b91c1c;
-                                                                                                                                                                                                                                    font-weight: bold;
-                                                                                                                                                                                                                                    background-color: #fee2e2;
-                                                                                                                                                                                                                                    padding: 2px 6px;
-                                                                                                                                                                                                                                    border-radius: 4px;
-                                                                                                                                                                                                                                    border: 1px solid #fca5a5;
-                                                                                                                                                                                                                                ">
+                                                                                                                                                                                                                                                                        color: #b91c1c;
+                                                                                                                                                                                                                                                                        font-weight: bold;
+                                                                                                                                                                                                                                                                        background-color: #fee2e2;
+                                                                                                                                                                                                                                                                        padding: 2px 6px;
+                                                                                                                                                                                                                                                                        border-radius: 4px;
+                                                                                                                                                                                                                                                                        border: 1px solid #fca5a5;
+                                                                                                                                                                                                                                                                    ">
                                     {{ $row->sanction->sanction_name }}
                                     - Php {{ number_format($row->sanction->monetary_amount, 2) }}
                                 </span>
@@ -133,13 +146,13 @@
                             @elseif($row->sanction->sanction_type === 'service')
                                 <span
                                     style="
-                                                                                                                                                                                                                                    color: #1d4ed8;
-                                                                                                                                                                                                                                    font-weight: bold;
-                                                                                                                                                                                                                                    background-color: #dbeafe;
-                                                                                                                                                                                                                                    padding: 2px 6px;
-                                                                                                                                                                                                                                    border-radius: 4px;
-                                                                                                                                                                                                                                    border: 1px solid #93c5fd;
-                                                                                                                                                                                                                                ">
+                                                                                                                                                                                                                                                                        color: #1d4ed8;
+                                                                                                                                                                                                                                                                        font-weight: bold;
+                                                                                                                                                                                                                                                                        background-color: #dbeafe;
+                                                                                                                                                                                                                                                                        padding: 2px 6px;
+                                                                                                                                                                                                                                                                        border-radius: 4px;
+                                                                                                                                                                                                                                                                        border: 1px solid #93c5fd;
+                                                                                                                                                                                                                                                                    ">
                                     {{ $row->sanction->sanction_name }}
                                     - {{ $row->sanction->service_time }}
                                     {{ ucfirst($row->sanction->service_time_type) }}

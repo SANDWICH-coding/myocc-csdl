@@ -54,6 +54,36 @@ export default function Index({ auth, totalIssuedTicketToday }) {
     return (
         <AppLayout user={auth.user}>
             <div className="container space-y-6">
+
+                {/* HEADER */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+
+                    {/* LEFT: Logo + School Info */}
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 text-center sm:text-left">
+                        <img
+                            src="/assets/images/school-logo.png"
+                            alt="Opol Community College Logo"
+                            className="img-fluid"
+                            style={{ width: '64px' }}
+                        />
+
+                        <div className="leading-tight">
+                            <div className="fw-semibold text-gray-800 text-base">
+                                Opol Community College
+                            </div>
+
+                            <div className="uppercase text-gray-500 font-medium text-xs border-t border-gray-300 mt-1 pt-1">
+                                Center for Student Development and Leadership
+                            </div>
+
+                            <div className="text-sm text-gray-600 font-bold tracking-tight">
+                                Office of the CSDL
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
                 <div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                         <div className="group relative overflow-hidden rounded-lg bg-white p-6 shadow-xs border transition-all duration-300 hover:shadow hover:-translate-y-1">

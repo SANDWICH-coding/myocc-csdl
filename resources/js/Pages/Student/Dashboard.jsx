@@ -69,10 +69,9 @@ export default function Dashboard({ auth, unsettledViolations, unsettledCount })
                 {/* DIGITAL ID + STATS */}
                 <div className=" md:pt-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
                         {/* LEFT: DIGITAL ID / QR */}
                         <div className="flex justify-center md:justify-start">
-                            <div className="w-full max-w-sm">
+                            <div className="w-full">
                                 <DigitalID
                                     userIdNo={user?.user_id_no || '0000-0-00000'}
                                 />
