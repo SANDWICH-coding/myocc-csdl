@@ -19,9 +19,18 @@ class UserController extends Controller
         $search = $request->input('search');
 
         $users = User::query()
+            ->select([
+                'id',
+                'user_id_no',
+                'user_role',
+                'profile_photo',
+                'created_at',
+            ])
             ->when($search, function ($query, $search) {
-                $query->where('user_id_no', 'like', "%{$search}%")
-                    ->orWhere('user_role', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('user_id_no', 'like', "%{$search}%")
+                        ->orWhere('user_role', 'like', "%{$search}%");
+                });
             })
             ->latest()
             ->paginate(16)
@@ -29,10 +38,14 @@ class UserController extends Controller
 
         // Transform users to include full URL for profile photo
         $users->getCollection()->transform(function ($user) {
-            $user->avatar = $user->profile_photo
-                ? Storage::disk('public')->url($user->profile_photo) . '?t=' . time()
-                : null;
-            return $user;
+            return [
+                'id' => $user->id,
+                'user_id_no' => $user->user_id_no,
+                'user_role' => $user->user_role,
+                'avatar' => $user->profile_photo
+                    ? Storage::disk('public')->url($user->profile_photo) . '?t=' . time()
+                    : null,
+            ];
         });
 
         return Inertia::render('Admin/Users/Index', [
@@ -42,6 +55,7 @@ class UserController extends Controller
             ],
         ]);
     }
+
 
     public function getStudentEnrollmentAPI(Request $request, SisApiService $sisApi)
     {
