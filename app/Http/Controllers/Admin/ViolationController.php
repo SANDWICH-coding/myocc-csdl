@@ -35,7 +35,6 @@ class ViolationController extends Controller
             'sanctions' => $sanctions,
             'defaultSanction' => $defaultSanction
         ]);
-
     }
 
     public function create()

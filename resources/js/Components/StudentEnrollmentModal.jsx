@@ -1,17 +1,11 @@
-import { s } from "framer-motion/client";
 import { User, IdCardLanyard, Cake, VenusAndMars, AtSign, Phone, MapPinHouse, CircleSmall, Calendar, Mail } from "lucide-react";
 import { useEffect } from "react";
 import { useState } from "react";
 
 export default function StudentEnrollmentModal({ open, onClose, data, loading }) {
-    if (!open) return null;
-
-    const student = data?.[0];
 
     const [activeTab, setActiveTab] = useState("personal");
 
-
-    // Optional: close modal on Escape key
     useEffect(() => {
         const handleKey = (e) => {
             if (e.key === "Escape") onClose();
@@ -19,6 +13,10 @@ export default function StudentEnrollmentModal({ open, onClose, data, loading })
         window.addEventListener("keydown", handleKey);
         return () => window.removeEventListener("keydown", handleKey);
     }, [onClose]);
+
+    if (!open) return null;
+
+    const student = data?.[0];
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity">
@@ -64,16 +62,16 @@ export default function StudentEnrollmentModal({ open, onClose, data, loading })
 
                                     {/* Name */}
                                     <div className="flex flex-col">
-                                        {/* First Name */}
-                                        <h2 className="text-2xl font-bold text-gray-900 leading-tight">
-                                            {student.first_name}
-                                        </h2>
 
                                         {/* Middle + Last Name */}
-                                        <p className="text-lg font-semibold text-gray-600">
-                                            {student.middle_name && `${student.middle_name} `}
+                                        <p className="text-2xl font-bold text-gray-900 leading-tight">
                                             {student.last_name}
                                         </p>
+
+                                        {/* First Name */}
+                                        <h2 className="text-lg font-semibold text-gray-600 ">
+                                            {student.first_name} {student.middle_name && `${student.middle_name} `}
+                                        </h2>
                                     </div>
                                 </div>
 
@@ -86,7 +84,6 @@ export default function StudentEnrollmentModal({ open, onClose, data, loading })
                             {[
                                 { key: "personal", label: "Basic Info" },
                                 { key: "enrollment", label: "Current Enrollment" },
-                                // { key: "records", label: "Records" },
                             ].map((tab) => (
                                 <button
                                     key={tab.key}
@@ -230,7 +227,7 @@ export default function StudentEnrollmentModal({ open, onClose, data, loading })
                                                                     </p>
                                                                 </div>
 
-                                                                
+
 
                                                             </div>
                                                         </div>
@@ -244,35 +241,29 @@ export default function StudentEnrollmentModal({ open, onClose, data, loading })
                                 })()}
                             </>
                         )}
-
-                        {/* {activeTab === "records" && (
-                            <div className="text-sm text-gray-500 py-6 text-center">
-                                No records available.
-                            </div>
-                        )} */}
-
                     </>
                 )}
             </div>
 
             {/* Spinner Styles */}
-            <style jsx>{`
-                .loader {
-                    border-top-color: #6366f1; /* Indigo-500 */
-                    animation: spin 1s linear infinite;
-                }
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-                .animate-scaleIn {
-                    animation: scaleIn 0.15s ease-out forwards;
-                }
-                @keyframes scaleIn {
-                    0% { opacity: 0; transform: scale(0.95); }
-                    100% { opacity: 1; transform: scale(1); }
-                }
-            `}</style>
-        </div>
+            <style>{`
+    .loader {
+        border-top-color: #6366f1;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .animate-scaleIn {
+        animation: scaleIn 0.15s ease-out forwards;
+    }
+    @keyframes scaleIn {
+        0% { opacity: 0; transform: scale(0.95); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+`}</style>
+
+        </div >
     );
 }

@@ -193,8 +193,6 @@ export default function UsersGrid({ users, filters }) {
                         </button>
                     </div>
                 )}
-
-
             </div>
 
             <div>
@@ -209,8 +207,6 @@ export default function UsersGrid({ users, filters }) {
         </>
 
     );
-
-
 
 }
 

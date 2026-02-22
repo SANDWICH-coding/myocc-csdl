@@ -6,10 +6,11 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
-        
+
         // Sanctum Stateful Auth
         $middleware->web(append: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
 
         // Aliases

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\SisApiService;
+use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +34,7 @@ class LoginController extends Controller
 
         if (!Auth::attempt($request->only('user_id_no', 'password'), true)) {
             return back()->withErrors([
-                'error' => 'Invalid login credentials.',
+                'error' => 'Invalid login credentials',
             ]);
         }
 
@@ -66,7 +67,6 @@ class LoginController extends Controller
 
     public function registerShowForm()
     {
-        // If user is already logged in, redirect them based on their role
         if (Auth::check()) {
             return $this->redirectBasedOnRole();
         }
@@ -77,45 +77,83 @@ class LoginController extends Controller
 
     public function register(Request $request, SisApiService $sisApi)
     {
-        $request->validate([
+        $validated = $request->validate([
             'user_id_no' => 'required|string',
             'last_name' => 'required|string',
-            'birthdate' => [
-                'required',
-                'date_format:Y-m-d',
-                'before_or_equal:today'
-            ],
+            'birthdate' => ['required', 'date', 'before_or_equal:today'],
             'email' => 'required|email',
             'password' => 'required|string|min:8',
         ]);
 
-        // Fetch student data from SIS API
         $students = $this->fetchStudentData($request->user_id_no, $sisApi);
 
         if ($students->isEmpty()) {
-            throw ValidationException::withMessages([
-                'user_id_no' => 'Student not found in the system.'
-            ]);
+            return back()->withErrors([
+                'user_id_no' => 'ID number not found in the system.'
+            ])->withInput();
         }
 
-        // Match student with form data and check for current school year
-        $matchedStudent = $students->first(function ($student) use ($request) {
-            $enrolledCurrent = collect($student['enrolled_students'] ?? [])
-                ->contains(fn($enroll) => ($enroll['year_section']['school_year']['is_current'] ?? 0) == 1);
+        $student = $students->first();
 
-            return $student['last_name'] === strtoupper($request->last_name)
-                && $student['birthday'] === $request->birthdate
-                && $enrolledCurrent;
-        });
+        if (!$student) {
+            return back()->withErrors([
+                'user_id_no' => 'Student not found in the system.'
+            ])->withInput();
+        }
 
-        if (!$matchedStudent) {
-            return back()->withErrors(['user_id_no' => 'No matching current enrollment found for this student.'])->withInput();
+        // Normalize values
+        $inputLastName = strtoupper(trim($request->last_name));
+        $apiLastName = strtoupper(trim($student['last_name'] ?? ''));
+
+        $inputEmail = strtolower(trim($request->email));
+        $apiEmail = strtolower(trim($student['email_address'] ?? ''));
+
+        // Normalize birthdates safely
+        try {
+            $inputBirthdate = Carbon::parse($request->birthdate)->format('Y-m-d');
+            $apiBirthdate = isset($student['birthday'])
+                ? Carbon::parse($student['birthday'])->format('Y-m-d')
+                : null;
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'birthdate' => 'Invalid birthdate format.'
+            ])->withInput();
+        }
+
+        // Comparisons
+        if ($inputLastName !== $apiLastName) {
+            return back()->withErrors([
+                'last_name' => 'Last name does not match our records.'
+            ])->withInput();
+        }
+
+        if (!$apiBirthdate || $inputBirthdate !== $apiBirthdate) {
+            return back()->withErrors([
+                'birthdate' => 'Birthdate does not match our records.'
+            ])->withInput();
+        }
+
+        if ($inputEmail !== $apiEmail) {
+            return back()->withErrors([
+                'email' => 'Email does not match our records.'
+            ])->withInput();
+        }
+
+        // Check if currently enrolled
+        $enrolledCurrent = collect($student['enrolled_students'] ?? [])
+            ->contains(function ($enroll) {
+                return ($enroll['year_section']['school_year']['is_current'] ?? 0) == 1;
+            });
+
+        if (!$enrolledCurrent) {
+            return back()->withErrors([
+                'user_id_no' => 'Student is not enrolled in the current school year.'
+            ])->withInput();
         }
 
         try {
-            // Create the user in the database
             $user = User::create([
-                'user_id_no' => $matchedStudent['user_id_no'],
+                'user_id_no' => $student['user_id_no'],
                 'user_role' => 'student',
                 'password' => Hash::make($request->password),
                 'email' => $request->email,
@@ -123,19 +161,21 @@ class LoginController extends Controller
                 'face_enrolled' => 0,
             ]);
         } catch (QueryException $e) {
-            // Handle duplicate user_id_no
-            if ($e->getCode() === '23000') { // Unique constraint violation
-                return back()->withErrors(['user_id_no' => 'This ID Number is already registered.'])->withInput();
+
+            if ($e->getCode() === '23000') {
+                return back()->withErrors([
+                    'user_id_no' => 'This ID Number is already registered.'
+                ])->withInput();
             }
 
-            // Other DB exceptions
-            return back()->withErrors(['error' => 'Something went wrong. Please try again.'])->withInput();
+            return back()->withErrors([
+                'user_id_no' => 'Something went wrong. Please try again.'
+            ])->withInput();
         }
 
-        // Log the user in after registration
         auth()->login($user);
 
-        return redirect()->route('student.dashboard')->with('success', 'Registration successful!');
+        return redirect()->route('student.dashboard');
     }
 
 
