@@ -51,8 +51,8 @@ export default function WelcomePage() {
                                 <a
                                     href="#home"
                                     className={`transition ${activeSection === "home"
-                                            ? "text-cyan-300 border-b-2 border-cyan-300"
-                                            : "opacity-80 hover:opacity-100"
+                                        ? "text-cyan-300 border-b-2 border-cyan-300"
+                                        : "opacity-80 hover:opacity-100"
                                         }`}
                                 >
                                     Home
@@ -63,8 +63,8 @@ export default function WelcomePage() {
                                 <a
                                     href="#features"
                                     className={`transition ${activeSection === "features"
-                                            ? "text-cyan-300 border-b-2 border-cyan-300"
-                                            : "opacity-80 hover:opacity-100"
+                                        ? "text-cyan-300 border-b-2 border-cyan-300"
+                                        : "opacity-80 hover:opacity-100"
                                         }`}
                                 >
                                     Features
@@ -75,8 +75,8 @@ export default function WelcomePage() {
                                 <a
                                     href="#about"
                                     className={`transition ${activeSection === "about"
-                                            ? "text-cyan-300 border-b-2 border-cyan-300"
-                                            : "opacity-80 hover:opacity-100"
+                                        ? "text-cyan-300 border-b-2 border-cyan-300"
+                                        : "opacity-80 hover:opacity-100"
                                         }`}
                                 >
                                     About
@@ -87,8 +87,8 @@ export default function WelcomePage() {
                                 <a
                                     href="#faq"
                                     className={`transition ${activeSection === "faq"
-                                            ? "text-cyan-300 border-b-2 border-cyan-300"
-                                            : "opacity-80 hover:opacity-100"
+                                        ? "text-cyan-300 border-b-2 border-cyan-300"
+                                        : "opacity-80 hover:opacity-100"
                                         }`}
                                 >
                                     FAQ
@@ -147,14 +147,16 @@ export default function WelcomePage() {
 
                         {/* Buttons */}
                         <div className="mt-10 flex w-full flex-col gap-4 sm:w-auto sm:flex-row">
-                            <button
+                            <Link
+                                href="/register"
                                 className="group inline-flex items-center justify-center gap-3 rounded-full
-          bg-cyan-400 px-7 py-3 text-base font-semibold text-slate-900
-          transition hover:bg-cyan-300"
+    bg-cyan-400 px-7 py-3 text-base font-semibold text-slate-900
+    transition hover:bg-cyan-300"
                             >
                                 Get Started
                                 <ArrowRightIcon className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                            </button>
+                            </Link>
+
 
                             {/* <a
                                 href={apkUrl}
@@ -199,7 +201,7 @@ export default function WelcomePage() {
                 <div className="mx-auto max-w-7xl px-6 py-8 md:py-10 flex flex-col md:flex-row items-center justify-between text-sm text-white/80">
 
                     {/* Left: Copyright */}
-                    <span>© 2025 myOCC.</span>
+                    <span>© 2025 myOCC</span>
 
                     {/* Right: Optional links */}
                     <div className="mt-4 md:mt-0 flex gap-4">

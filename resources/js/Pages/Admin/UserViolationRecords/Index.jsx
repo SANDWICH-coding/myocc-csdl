@@ -86,7 +86,14 @@ export default function Index({ auth, violations, filters }) {
             label: "Issued Date",
             render: (row) => (
                 <span>
-                    {new Date(row.issued_date_time).toLocaleString()}
+                    {new Date(row.issued_date_time).toLocaleString("en-PH", {
+                        year: "numeric",
+                        month: "short",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                    })}
                 </span>
             ),
         },
@@ -104,26 +111,10 @@ export default function Index({ auth, violations, filters }) {
         },
         {
             key: "user",
-            label: "Student",
+            label: "ID No",
             render: (row) => (
-                <div
-                    onClick={() => openStudentModal(row.user?.user_id_no)}
-                    className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition"
-                >
-                    <img
-                        src={
-                            row.user?.profile_photo
-                                ? `/storage/${row.user.profile_photo}`
-                                : "/default-avatar.png"
-                        }
-                        alt="Profile"
-                        className="w-10 h-10 rounded-full object-cover border"
-                    />
-                    <div>
-                        <div className="font-medium text-blue-600 hover:underline">
-                            {row.user?.user_id_no}
-                        </div>
-                    </div>
+                <div className="font-medium text-left cursor-pointer text-blue-600 hover:underline" onClick={() => openStudentModal(row.user?.user_id_no)}>
+                    {row.user?.user_id_no}
                 </div>
             ),
         },
@@ -211,7 +202,7 @@ export default function Index({ auth, violations, filters }) {
                 data={violationsData}
                 search={filters?.search}
                 onSearch={handleSearch}
-                searchPlaceholder="Search reference number or student..."
+                searchPlaceholder="Search reference number or ID number..."
             />
 
             <Modal

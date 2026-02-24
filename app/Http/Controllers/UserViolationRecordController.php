@@ -121,11 +121,22 @@ class UserViolationRecordController extends Controller
     {
         $search = $request->search;
 
-        $violations = UserViolationRecord::with([
-            'sanction',
-            'issuer',
-            'user'
-        ])
+        $violations = UserViolationRecord::query()
+            ->select([
+                'id',
+                'reference_no',
+                'user_id',
+                'sanction_id',
+                'issued_by',
+                'status',
+                'issued_date_time',
+                'violation_ids',
+            ])
+            ->with([
+                'user:id,user_id_no',
+                'issuer:id,user_id_no',
+                'sanction:id,sanction_type,monetary_amount,service_time,service_time_type,sanction_name',
+            ])
             ->when($search, function ($query) use ($search) {
                 $query->where('reference_no', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($q) use ($search) {
@@ -136,7 +147,9 @@ class UserViolationRecordController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Get all violation IDs from current page
+        /**
+         * Collect all violation IDs from current page
+         */
         $allViolationIds = collect($violations->items())
             ->pluck('violation_ids')
             ->flatten()
@@ -144,19 +157,44 @@ class UserViolationRecordController extends Controller
             ->filter()
             ->values();
 
-        // Fetch all violation codes at once
+        /**
+         * Fetch only needed violation codes
+         */
         $violationMap = Violation::whereIn('id', $allViolationIds)
             ->pluck('violation_code', 'id');
 
-        // Transform collection
+        /**
+         * Transform data (Clean API-style response)
+         */
         $violations->getCollection()->transform(function ($record) use ($violationMap) {
 
-            $record->violation_codes = collect($record->violation_ids)
-                ->map(fn($id) => $violationMap[$id] ?? null)
-                ->filter()
-                ->values();
+            return [
+                'id' => $record->id,
+                'reference_no' => $record->reference_no,
+                'issued_date_time' => $record->issued_date_time,
+                'status' => $record->status,
 
-            return $record;
+                'user' => [
+                    'user_id_no' => $record->user?->user_id_no,
+                ],
+
+                'issuer' => [
+                    'user_id_no' => $record->issuer?->user_id_no,
+                ],
+
+                'sanction' => $record->sanction ? [
+                    'sanction_type' => $record->sanction->sanction_type,
+                    'monetary_amount' => $record->sanction->monetary_amount,
+                    'service_time' => $record->sanction->service_time,
+                    'service_time_type' => $record->sanction->service_time_type,
+                    'sanction_name' => $record->sanction->sanction_name,
+                ] : null,
+
+                'violation_codes' => collect($record->violation_ids)
+                    ->map(fn($id) => $violationMap[$id] ?? null)
+                    ->filter()
+                    ->values(),
+            ];
         });
 
         return Inertia::render('Admin/UserViolationRecords/Index', [
@@ -164,6 +202,7 @@ class UserViolationRecordController extends Controller
             'filters' => $request->only('search'),
         ]);
     }
+
 
     public function updateStatus(Request $request, $id)
     {

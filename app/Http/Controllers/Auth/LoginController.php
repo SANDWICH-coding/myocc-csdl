@@ -27,21 +27,34 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
-            'user_id_no' => 'required',
-            'password' => 'required',
+        $validated = $request->validate([
+            'user_id_no' => 'required|string',
+            'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($request->only('user_id_no', 'password'), true)) {
-            return back()->withErrors([
-                'error' => 'Invalid login credentials',
-            ]);
+        if (!Auth::attempt($validated, true)) {
+            return response()->json([
+                'errors' => [
+                    'user_id_no' => ['Invalid login credentials.']
+                ]
+            ], 422);
         }
 
         $request->session()->regenerate();
 
-        // Redirect the user based on their role after successful login
-        return $this->redirectBasedOnRole();
+        $user = auth()->user();
+
+        $redirect = match ($user->user_role) {
+            'admin' => route('admin.dashboard'),
+            'security' => route('security.dashboard'),
+            'student' => route('student.dashboard'),
+            default => '/',
+        };
+
+        return response()->json([
+            'message' => 'Login successful',
+            'redirect' => $redirect
+        ]);
     }
 
     public function logout(Request $request)
@@ -88,67 +101,69 @@ class LoginController extends Controller
         $students = $this->fetchStudentData($request->user_id_no, $sisApi);
 
         if ($students->isEmpty()) {
-            return back()->withErrors([
-                'user_id_no' => 'ID number not found in the system.'
-            ])->withInput();
+            return response()->json([
+                'errors' => [
+                    'user_id_no' => ['ID number not found in the system.']
+                ]
+            ], 422);
         }
 
         $student = $students->first();
 
-        if (!$student) {
-            return back()->withErrors([
-                'user_id_no' => 'Student not found in the system.'
-            ])->withInput();
-        }
-
-        // Normalize values
         $inputLastName = strtoupper(trim($request->last_name));
         $apiLastName = strtoupper(trim($student['last_name'] ?? ''));
 
         $inputEmail = strtolower(trim($request->email));
         $apiEmail = strtolower(trim($student['email_address'] ?? ''));
 
-        // Normalize birthdates safely
         try {
             $inputBirthdate = Carbon::parse($request->birthdate)->format('Y-m-d');
             $apiBirthdate = isset($student['birthday'])
                 ? Carbon::parse($student['birthday'])->format('Y-m-d')
                 : null;
         } catch (\Exception $e) {
-            return back()->withErrors([
-                'birthdate' => 'Invalid birthdate format.'
-            ])->withInput();
+            return response()->json([
+                'errors' => [
+                    'birthdate' => ['Invalid birthdate format.']
+                ]
+            ], 422);
         }
 
-        // Comparisons
         if ($inputLastName !== $apiLastName) {
-            return back()->withErrors([
-                'last_name' => 'Last name does not match our records.'
-            ])->withInput();
+            return response()->json([
+                'errors' => [
+                    'last_name' => ['Last name does not match our records.']
+                ]
+            ], 422);
         }
 
         if (!$apiBirthdate || $inputBirthdate !== $apiBirthdate) {
-            return back()->withErrors([
-                'birthdate' => 'Birthdate does not match our records.'
-            ])->withInput();
+            return response()->json([
+                'errors' => [
+                    'birthdate' => ['Birthdate does not match our records.']
+                ]
+            ], 422);
         }
 
         if ($inputEmail !== $apiEmail) {
-            return back()->withErrors([
-                'email' => 'Email does not match our records.'
-            ])->withInput();
+            return response()->json([
+                'errors' => [
+                    'email' => ['Email does not match our records.']
+                ]
+            ], 422);
         }
 
-        // Check if currently enrolled
         $enrolledCurrent = collect($student['enrolled_students'] ?? [])
             ->contains(function ($enroll) {
                 return ($enroll['year_section']['school_year']['is_current'] ?? 0) == 1;
             });
 
         if (!$enrolledCurrent) {
-            return back()->withErrors([
-                'user_id_no' => 'Student is not enrolled in the current school year.'
-            ])->withInput();
+            return response()->json([
+                'errors' => [
+                    'user_id_no' => ['Student is not enrolled in the current school year.']
+                ]
+            ], 422);
         }
 
         try {
@@ -163,21 +178,27 @@ class LoginController extends Controller
         } catch (QueryException $e) {
 
             if ($e->getCode() === '23000') {
-                return back()->withErrors([
-                    'user_id_no' => 'This ID Number is already registered.'
-                ])->withInput();
+                return response()->json([
+                    'errors' => [
+                        'user_id_no' => ['This ID Number is already registered.']
+                    ]
+                ], 422);
             }
 
-            return back()->withErrors([
-                'user_id_no' => 'Something went wrong. Please try again.'
-            ])->withInput();
+            return response()->json([
+                'errors' => [
+                    'user_id_no' => ['Something went wrong. Please try again.']
+                ]
+            ], 422);
         }
 
         auth()->login($user);
 
-        return redirect()->route('student.dashboard');
+        return response()->json([
+            'message' => 'Registration successful',
+            'redirect' => route('student.dashboard')
+        ]);
     }
-
 
     private function fetchStudentData($userIdNo, SisApiService $sisApi)
     {

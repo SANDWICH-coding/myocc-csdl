@@ -15,7 +15,7 @@ function getRoleBadgeColor(role) {
         case "moderator":
             return "bg-purple-500";
         default:
-            return "bg-gray-400"; // fallback
+            return "bg-gray-400"; 
     }
 }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UserInformation;
 use App\Services\SisApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -16,7 +17,7 @@ class UserProfileController extends Controller
     {
         $user = auth()->user();
 
-        // Always build avatar
+        // Build avatar from users table
         $avatar = $user->profile_photo
             ? Storage::disk('public')->url($user->profile_photo) . '?t=' . time()
             : null;
@@ -25,14 +26,22 @@ class UserProfileController extends Controller
         $userInfoData = null;
 
         if ($user->user_role === 'student') {
-            $data = $this->fetchStudentData($user->user_id_no, $sisApi);
-            $studentData = $data?->first();
-        } else {
-            // Fetch non-student user information
-            $userInfoData = \App\Models\UserInformation::where('user_id_no', $user->user_id_no)->first();
 
+            $studentData = $this->fetchStudentData($user->user_id_no, $sisApi);
+
+        } else {
+
+            $userInfoData = UserInformation::where('user_id_no', $user->user_id_no)
+                ->select([
+                    'first_name',
+                    'middle_name',
+                    'last_name',
+                    'email_address',
+                ])
+                ->first();
+
+            // If user table has no avatar, fallback to user_information
             if ($userInfoData && !$avatar && $userInfoData->profile_photo) {
-                // Use the profile photo from user_information if user doesn't have one
                 $avatar = Storage::disk('public')->url($userInfoData->profile_photo) . '?t=' . time();
             }
         }
@@ -45,10 +54,10 @@ class UserProfileController extends Controller
     }
 
 
-    private function fetchStudentData($userIdNos, SisApiService $sisApi)
+    private function fetchStudentData($userIdNo, SisApiService $sisApi)
     {
         $query = http_build_query([
-            'user_id_no' => (array) $userIdNos
+            'user_id_no' => [$userIdNo]
         ]);
 
         $response = $sisApi->get("/api/student-enrollment?{$query}");
@@ -57,26 +66,29 @@ class UserProfileController extends Controller
             return null;
         }
 
-        return collect($response->json())->map(function ($student) {
+        $student = collect($response->json())->first();
 
-            if (!isset($student['user_id_no'])) {
-                return $student;
-            }
+        if (!$student) {
+            return null;
+        }
 
-            $user = User::where('user_id_no', $student['user_id_no'])->first();
-
-            $student['avatar'] = $user && $user->profile_photo
-                ? Storage::disk('public')->url($user->profile_photo) . '?t=' . time()
-                : null;
-
-            return $student;
-        });
+        return [
+            'first_name' => $student['first_name'] ?? null,
+            'middle_name' => $student['middle_name'] ?? null,
+            'last_name' => $student['last_name'] ?? null,
+            'gender' => $student['gender'] ?? null,
+            'birthday' => $student['birthday'] ?? null,
+            'email_address' => $student['email_address'] ?? null,
+            'contact_number' => $student['contact_number'] ?? null,
+            'present_address' => $student['present_address'] ?? null,
+            'zip_code' => $student['zip_code'] ?? null,
+        ];
     }
 
     public function updateAvatar(Request $request)
     {
         $request->validate([
-            'avatar' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'avatar' => 'required|image|max:5120',
         ]);
 
         $user = auth()->user();

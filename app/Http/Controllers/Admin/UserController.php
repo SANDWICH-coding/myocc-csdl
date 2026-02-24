@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use Str;
 
 class UserController extends Controller
 {
@@ -196,5 +197,41 @@ class UserController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+    
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'user_id_no' => 'required|exists:users,user_id_no',
+        ]);
+
+        $user = User::where('user_id_no', $request->user_id_no)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found.'
+            ], 404);
+        }
+
+        // Generate secure random 8 characters
+        $newPassword = Str::random(8);
+
+        $user->password = Hash::make($newPassword);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Password reset successfully.',
+            'new_password' => $newPassword,
+        ]);
+    }
+
+    /**
+     * Deactivate account (future feature)
+     */
+    public function deactivate(Request $request)
+    {
+        return response()->json([
+            'message' => 'Account deactivation feature coming soon.'
+        ]);
     }
 }

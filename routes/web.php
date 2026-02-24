@@ -59,6 +59,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/manage-user', action: [UserController::class, 'index'])->name('manage.user.index');
         Route::post('/manage-user/store', [UserController::class, 'store'])->name('manage.user.store');
         Route::get('/admin/student-enrollment', [UserController::class, 'getStudentEnrollmentAPI']);
+        Route::post('/admin/user/reset-password', [UserController::class, 'resetPassword'])->name('admin.users.resetPassword');
+        Route::post('/admin/user/deactivate', [UserController::class, 'deactivate'])->name('admin.users.deactivate');
 
         Route::get('/manage-violation-records', [UserViolationRecordController::class, 'allUserViolationRecordsIndex'])->name('admin.userViolationRecords.index');
         Route::put('/manage-violation-records/{id}/update-status', [UserViolationRecordController::class, 'updateStatus'])

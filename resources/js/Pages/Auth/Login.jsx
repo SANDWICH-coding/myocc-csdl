@@ -1,29 +1,55 @@
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { useForm } from '@inertiajs/react';
 import { Globe, ShieldAlert, Users } from 'lucide-react';
 import { useState } from 'react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 export default function Login() {
-    const { data, setData, post, processing, errors } = useForm({
+    const [data, setData] = useState({
         user_id_no: '',
         password: ''
     });
 
+    const [errors, setErrors] = useState({});
+    const [processing, setProcessing] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    function submit(e) {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        post('/login');
-    }
+        setProcessing(true);
+        setErrors({});
+
+        const promise = axios.post('/login', data);
+
+        toast.promise(promise, {
+            loading: 'Signing in...',
+            success: 'Login successful!',
+            error: 'Invalid credentials',
+        });
+
+        try {
+            const response = await promise;
+
+            window.location.href = response.data.redirect;
+
+        } catch (error) {
+            if (error.response?.status === 422) {
+                setErrors(error.response.data.errors);
+            } else {
+                console.error(error);
+            }
+        } finally {
+            setProcessing(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#f4f6fb] flex items-center justify-center px-4">
-            <div className="w-full max-w-6xl rounded-2xl overflow-hidden shadow-2xl grid grid-cols-1 md:grid-cols-2 bg-white">
+            <div className="w-full max-w-6xl rounded-2xl overflow-hidden border grid grid-cols-1 md:grid-cols-2 bg-white">
 
                 {/* LEFT SIDE */}
                 <div className="hidden md:flex flex-col justify-between bg-gradient-to-br from-blue-600 to-blue-700 text-white p-12 relative">
 
-                    {/* Top */}
                     <div>
                         <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center mb-6 shadow">
                             <img src="/assets/images/school-logo.png" alt="Logo" className="h-8 w-8" />
@@ -34,7 +60,7 @@ export default function Login() {
                         </h2>
 
                         <p className="mt-3 text-blue-100 text-lg">
-                            Center for Student Developlment and Leadership
+                            Center for Student Development and Leadership
                         </p>
 
                         <div className="mt-12 space-y-6 text-blue-100 text-sm">
@@ -63,7 +89,6 @@ export default function Login() {
                         </div>
                     </div>
 
-                    {/* Bottom */}
                     <div className="text-blue-200 text-xs tracking-widest border-t border-blue-500 pt-4">
                         EMPOWERING EXCELLENCE
                     </div>
@@ -77,16 +102,7 @@ export default function Login() {
                     <img
                         src="/favicon.png"
                         alt="Watermark"
-                        className="
-            absolute
-            -top-5
-            -left-5
-            w-[200px]
-            opacity-[0.1]
-            rotate-[-25deg]
-            pointer-events-none
-            select-none
-        "
+                        className="absolute -top-5 -left-5 w-[200px] opacity-[0.1] rotate-[-25deg] pointer-events-none select-none"
                     />
 
                     <div className="w-full max-w-md">
@@ -100,11 +116,12 @@ export default function Login() {
                             </p>
                         </div>
 
-                        <form onSubmit={submit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-6">
 
-                            {errors.error && (
+                            {/* Global Error */}
+                            {errors.user_id_no && (
                                 <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
-                                    {errors.error}
+                                    {errors.user_id_no[0]}
                                 </div>
                             )}
 
@@ -118,16 +135,12 @@ export default function Login() {
                                     required
                                     autoComplete="username"
                                     value={data.user_id_no}
-                                    onChange={e => setData('user_id_no', e.target.value)}
+                                    onChange={e =>
+                                        setData({ ...data, user_id_no: e.target.value })
+                                    }
                                     placeholder="Enter your ID Number"
-                                    className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-transparent focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition uppercase placeholder:normal-case"
+                                    className={`w-full px-4 uppercase placeholder placeholder:normal-case py-3 rounded-xl bg-gray-100 border focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition`}
                                 />
-
-                                {errors.user_id_no && (
-                                    <p className="mt-1 text-sm text-red-600">
-                                        {errors.user_id_no}
-                                    </p>
-                                )}
                             </div>
 
                             {/* PASSWORD */}
@@ -135,16 +148,20 @@ export default function Login() {
                                 <label className="block text-sm font-medium text-gray-600 mb-2">
                                     Password
                                 </label>
+
                                 <div className="relative">
                                     <input
                                         type={showPassword ? 'text' : 'password'}
                                         required
                                         autoComplete="current-password"
                                         value={data.password}
-                                        onChange={e => setData('password', e.target.value)}
+                                        onChange={e =>
+                                            setData({ ...data, password: e.target.value })
+                                        }
                                         placeholder="Enter your password"
-                                        className="w-full px-4 py-3 rounded-xl bg-gray-100 border border-transparent focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition"
+                                        className={`w-full px-4 py-3 rounded-xl bg-gray-100 border focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 outline-none transition`}
                                     />
+
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
@@ -157,11 +174,6 @@ export default function Login() {
                                         )}
                                     </button>
                                 </div>
-                                {errors.password && (
-                                    <p className="mt-1 text-sm text-red-600">
-                                        {errors.password}
-                                    </p>
-                                )}
                             </div>
 
                             {/* OPTIONS */}
@@ -172,38 +184,40 @@ export default function Login() {
                             </div>
 
                             {/* BUTTON */}
-                             <button
-                                    type="submit"
-                                    disabled={processing}
-                                    className="w-full py-3 rounded-xl text-white font-semibold bg-blue-600 hover:bg-blue-700 
-               transition shadow-lg shadow-blue-200 disabled:opacity-70 
-               disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                >
-                                    {processing && (
-                                        <svg
-                                            className="w-5 h-5 animate-spin"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <circle
-                                                className="opacity-25"
-                                                cx="12"
-                                                cy="12"
-                                                r="10"
-                                                stroke="currentColor"
-                                                strokeWidth="4"
-                                            />
-                                            <path
-                                                className="opacity-75"
-                                                fill="currentColor"
-                                                d="M4 12a8 8 0 018-8v8H4z"
-                                            />
-                                        </svg>
-                                    )}
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="w-full py-3 rounded-xl text-white font-semibold 
+                                bg-blue-600 hover:bg-blue-700 transition shadow-lg shadow-blue-200 
+                                disabled:opacity-70 disabled:cursor-not-allowed 
+                                flex items-center justify-center gap-2"
+                            >
+                                {processing && (
+                                    <svg
+                                        className="w-5 h-5 animate-spin"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <circle
+                                            className="opacity-25"
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            stroke="currentColor"
+                                            strokeWidth="4"
+                                        />
+                                        <path
+                                            className="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8v8H4z"
+                                        />
+                                    </svg>
+                                )}
 
-                                    {processing ? 'Signing in...' : 'Sign In'}
-                                </button>
+                                {processing ? 'Signing in...' : 'Sign In'}
+                            </button>
+
                         </form>
                     </div>
                 </div>

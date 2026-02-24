@@ -1,29 +1,74 @@
 import { User, IdCardLanyard, Cake, VenusAndMars, AtSign, Phone, MapPinHouse, CircleSmall, Calendar, Mail } from "lucide-react";
 import { useEffect } from "react";
 import { useState } from "react";
+import axios from "axios";
+import toast from "react-hot-toast";
+import { RefreshCw, Copy, AlertTriangle } from "lucide-react";
 
 export default function StudentEnrollmentModal({ open, onClose, data, loading }) {
 
     const [activeTab, setActiveTab] = useState("personal");
 
+    const [generatedPassword, setGeneratedPassword] = useState(null);
+    const [processing, setProcessing] = useState(false);
+
+    const student = data?.[0];
+
+    const handleResetPassword = async () => {
+        setProcessing(true);
+
+        try {
+            const response = await axios.post('/admin/user/reset-password', {
+                user_id_no: student.user_id_no
+            });
+
+            setGeneratedPassword(response.data.new_password);
+
+            toast.success("Password reset successfully.");
+        } catch (error) {
+            toast.error("Failed to reset password.");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleCopy = async () => {
+        if (!generatedPassword) return;
+
+        await navigator.clipboard.writeText(generatedPassword);
+        toast.success("Password copied to clipboard.");
+    };
+
+    const handleDeactivate = async () => {
+        toast("Account Deactivation coming soon.", {
+            icon: <AlertTriangle size={16} />,
+        });
+    }
+
+
+    const handleClose = () => {
+        setActiveTab("personal");
+        setGeneratedPassword(null);
+        setProcessing(false);
+        onClose();
+    };
+
     useEffect(() => {
         const handleKey = (e) => {
-            if (e.key === "Escape") onClose();
+            if (e.key === "Escape") handleClose();
         };
         window.addEventListener("keydown", handleKey);
         return () => window.removeEventListener("keydown", handleKey);
-    }, [onClose]);
+    }, [handleClose]);
 
     if (!open) return null;
-
-    const student = data?.[0];
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity">
             <div className="bg-white rounded-xl w-full max-w-3xl p-6 relative shadow-xl transform transition-transform scale-95 animate-scaleIn">
                 {/* Close Button */}
                 <button
-                    onClick={onClose}
+                    onClick={handleClose}
                     className="absolute top-4 right-4 p-2 hover:bg-gray-200 transition"
                     aria-label="Close Modal"
                 >
@@ -84,6 +129,7 @@ export default function StudentEnrollmentModal({ open, onClose, data, loading })
                             {[
                                 { key: "personal", label: "Basic Info" },
                                 { key: "enrollment", label: "Current Enrollment" },
+                                { key: "account", label: "Account Management" },
                             ].map((tab) => (
                                 <button
                                     key={tab.key}
@@ -241,12 +287,71 @@ export default function StudentEnrollmentModal({ open, onClose, data, loading })
                                 })()}
                             </>
                         )}
+
+                        {activeTab === "account" && (
+                            <>
+                                {/* Password Reset */}
+                                < div className="border rounded-xl p-4 bg-gray-50 space-y-4 mb-4" >
+                                    <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                                        <RefreshCw size={16} /> Password Reset
+                                    </h3>
+
+                                    <p className="text-gray-500">
+                                        Reset this account's password. A new 8-character password will be generated automatically.
+                                    </p>
+
+                                    <button
+                                        onClick={handleResetPassword}
+                                        disabled={processing}
+                                        className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
+                                    >
+                                        {processing ? "Generating..." : "Reset Password"}
+                                    </button>
+
+                                    {generatedPassword && (
+                                        <div className="mt-4 bg-white border rounded-lg p-3 flex items-center justify-between">
+                                            <span className="font-mono text-lg tracking-wider text-gray-800">
+                                                {generatedPassword}
+                                            </span>
+
+                                            <button
+                                                onClick={handleCopy}
+                                                className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                                            >
+                                                <Copy size={16} /> Copy
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+
+                                {/* Account Deactivation */}
+                                <div className="border rounded-xl p-4 bg-red-50 space-y-4">
+                                    <h3 className="font-semibold text-red-700 flex items-center gap-2">
+                                        <AlertTriangle size={16} /> Account Deactivation
+                                    </h3>
+
+                                    <p className="text-red-600">
+                                        This feature is under maintenance and will be available soon.
+                                    </p>
+
+                                    <button
+                                        onClick={handleDeactivate}
+                                        className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
+                                    >
+                                        Deactivate Account
+                                    </button>
+                                </div>
+                            </>
+
+                        )}
                     </>
-                )}
-            </div>
+                )
+                }
+            </div >
 
             {/* Spinner Styles */}
-            <style>{`
+            < style > {`
     .loader {
         border-top-color: #6366f1;
         animation: spin 1s linear infinite;
@@ -262,7 +367,7 @@ export default function StudentEnrollmentModal({ open, onClose, data, loading })
         0% { opacity: 0; transform: scale(0.95); }
         100% { opacity: 1; transform: scale(1); }
     }
-`}</style>
+`}</style >
 
         </div >
     );

@@ -80,7 +80,7 @@ export default function StudentResultModal({
             <Modal isOpen={open} onClose={onClose} title={
                 <div className="flex flex-col">
                     <span className="text-xs text-gray-500 uppercase tracking-wide">
-                        Student ID
+                        ID Number
                     </span>
                     <span className="font-mono text-base">
                         {id}
@@ -94,7 +94,7 @@ export default function StudentResultModal({
                         <div className="flex flex-col items-center justify-center py-10">
                             <div className="h-10 w-10 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin" />
                             <p className="mt-4 text-sm text-gray-600">
-                                Fetching student details…
+                                Fetching user details…
                             </p>
                         </div>
                     )}
@@ -105,7 +105,7 @@ export default function StudentResultModal({
                             <ExclamationTriangleIcon className="h-6 w-6 text-red-600 shrink-0" />
                             <div>
                                 <p className="font-medium text-red-700">
-                                    Unable to find student
+                                    Unable to find user
                                 </p>
                                 <p className="text-sm text-red-600">
                                     {error}

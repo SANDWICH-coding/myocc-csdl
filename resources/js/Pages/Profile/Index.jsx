@@ -260,7 +260,7 @@ export default function Index({ auth, studentData, userInfoData, avatar }) {
                             className={`transition-all duration-300 ease-in-out ${showChangePassword ? "max-h-[500px] opacity-100 p-5 pt-0" : "max-h-0 opacity-0"
                                 } overflow-hidden`}
                         >
-                            <form onSubmit={handleChangePassword} className="space-y-3">
+                            <form onSubmit={handleChangePassword} className="space-y-3 mt-2">
                                 <input
                                     type="password"
                                     placeholder="New Password"
