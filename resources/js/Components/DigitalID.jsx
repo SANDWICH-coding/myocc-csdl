@@ -57,7 +57,13 @@ export default function DigitalID({
                                 size={window.innerWidth < 400 ? 130 : 150}
                                 bgColor="#ffffff"
                                 fgColor="#0f172a"
-                                level="H"
+                                level="H"   // Important: keep this HIGH for logo support
+                                imageSettings={{
+                                    src: "/assets/images/school-logo.png",   // public folder path
+                                    height: 40,
+                                    width: 40,
+                                    excavate: true,     // clears background behind logo
+                                }}
                             />
                         </div>
                     </div>

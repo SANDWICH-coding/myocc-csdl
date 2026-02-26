@@ -1,14 +1,23 @@
 import { useEffect, useState } from 'react';
-import AppLayout from '../../Layouts/AppLayout';
-import StatsBarChart from '../../Components/StatsBarChart';
-import DashboardStats from '../../Components/DashboardStats';
+import AppLayout from '../../../Layouts/AppLayout';
+import StatsBarChart from '../../../Components/StatsBarChart';
+import DashboardStats from '../../../Components/DashboardStats';
+import DepartmentUsersPieChart from './components/DepartmentUsersPieChart';
+import DepartmentViolationBarChart from './components/DepartmentViolationBarChart';
 
 export default function Dashboard({
     auth,
     totalUsers,
+    usersWithProfilePhoto,
+    usersWithFaceEnrolled,
     unsettledViolations,
-    violationChartData
+    violationChartData,
+    departmentViolationChartData,
+    departmentUserCounts,
+    violationCodes
 }) {
+
+
 
     const user = auth?.user;
     const colors = ["#2563eb", "#f97316", "#dc2626", "#10b981", "#efef04", "#8b5cf6"];
@@ -40,26 +49,21 @@ export default function Dashboard({
                     </div>
                 </div>
 
-                {/* STATISTICS */}
-                <DashboardStats
-                    totalUsers={totalUsers}
-                    unsettledViolations={unsettledViolations}
-                />
-
                 {/* CHART */}
                 <div className="space-y-2">
-                    <div className="fw-semibold text-sm md:text-base text-gray-700">
-                        Violation Code Statistics
-                    </div>
-                    <div className="border rounded-lg shadow-xs bg-white p-3 md:p-4">
-                        <StatsBarChart
-                            data={violationChartData}
-                            xKey="violation_code"
-                            barKey="count"
-                            height={320}
-                            colors={colors}
-                        />
-                    </div>
+                    <DepartmentUsersPieChart
+                        data={departmentUserCounts}
+                        usersWithProfilePhoto={usersWithProfilePhoto}
+                        usersWithFaceEnrolled={usersWithFaceEnrolled}
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <DepartmentViolationBarChart
+                        data={departmentViolationChartData}
+                        violationCodes={violationCodes}
+                    />
+
                 </div>
             </div>
         </AppLayout>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserViolationRecord;
 use App\Models\Violation;
+use App\Services\SisApiService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -16,53 +17,197 @@ class DashboardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, SisApiService $sisApi)
     {
         $totalUsers = User::count();
+
+        // ✅ NEW COUNTS
+        $usersWithProfilePhoto = User::whereNotNull('profile_photo')
+            ->where('profile_photo', '!=', '')
+            ->count();
+
+        $usersWithFaceEnrolled = User::where('face_enrolled', 1)->count();
+
         $unsettledViolations = UserViolationRecord::where('status', 'unsettled')->count();
 
-        // Get all active violations
-        $violations = Violation::where('status', true)->get();
+        // Active violations
+        $violations = Violation::where('status', true)
+            ->get(['id', 'violation_code']);
 
-        // Initialize counts array using violation_code as key
+        $violationMap = $violations->pluck('violation_code', 'id');
+
+        $structureResponse = $sisApi->get('/api/school-structure');
+
+        if (!$structureResponse->ok()) {
+            return Inertia::render('Admin/Dashboard/Index', [
+                'totalUsers' => $totalUsers,
+                'usersWithProfilePhoto' => $usersWithProfilePhoto,      // ✅ NEW
+                'usersWithFaceEnrolled' => $usersWithFaceEnrolled,      // ✅ NEW
+                'unsettledViolations' => $unsettledViolations,
+                'violationChartData' => [],
+                'departmentViolationChartData' => [],
+                'departmentUserCounts' => [],
+                'violationCodes' => [],
+            ]);
+        }
+
+        $departments = $structureResponse->json()['departments'] ?? [];
+
+        $userDepartmentMap = [];
+        $departmentViolationCounts = [];
+
+        foreach ($departments as $department) {
+
+            $departmentId = $department['id'];
+            $departmentName = $department['department_name'];
+
+            $departmentViolationCounts[$departmentName] = [];
+
+            foreach ($violations as $violation) {
+                $departmentViolationCounts[$departmentName][$violation->violation_code] = 0;
+            }
+
+            $studentResponse = $sisApi->get(
+                '/api/student-enrollment?department_id[]=' . $departmentId
+            );
+
+            if (!$studentResponse->ok()) {
+                continue;
+            }
+
+            $userIds = $studentResponse->json()['user_id_no'] ?? [];
+
+            foreach ($userIds as $userIdNo) {
+                $userDepartmentMap[strtoupper($userIdNo)] = $departmentName;
+            }
+        }
+
         $violationCounts = [];
 
         foreach ($violations as $violation) {
             $violationCounts[$violation->violation_code] = 0;
         }
 
-        // Get all violation records
-        $records = UserViolationRecord::all();
+        $records = UserViolationRecord::with('user')->get();
 
         foreach ($records as $record) {
+
             if (!is_array($record->violation_ids)) {
+                continue;
+            }
+
+            $user = $record->user;
+
+            if (!$user) {
+                continue;
+            }
+
+            $userIdNo = strtoupper($user->user_id_no);
+
+            $departmentName = $userDepartmentMap[$userIdNo] ?? null;
+
+            if (!$departmentName) {
                 continue;
             }
 
             foreach ($record->violation_ids as $violationId) {
 
-                $violation = $violations->firstWhere('id', $violationId);
-
-                if ($violation) {
-                    $code = $violation->violation_code;
-                    $violationCounts[$code]++;
+                if (!isset($violationMap[$violationId])) {
+                    continue;
                 }
+
+                $code = $violationMap[$violationId];
+
+                $violationCounts[$code]++;
+                $departmentViolationCounts[$departmentName][$code]++;
             }
         }
 
-        // Convert to chart-friendly format
-        $violationChartData = collect($violationCounts)->map(function ($count, $code) {
-            return [
-                'violation_code' => $code,
-                'count' => $count,
-            ];
-        })->values();
+        $violationChartData = collect($violationCounts)
+            ->map(function ($count, $code) {
+                return [
+                    'violation_code' => $code,
+                    'count' => $count,
+                ];
+            })
+            ->values();
 
-        return Inertia::render('Admin/Dashboard', [
+        $departmentViolationChartData = collect($departmentViolationCounts)
+            ->map(function ($codes, $departmentName) {
+                return array_merge(
+                    ['department_name' => $departmentName],
+                    $codes
+                );
+            })
+            ->values();
+
+        $departmentUserCounts = $this->fetchDepartmentUserCounts($sisApi);
+
+        return Inertia::render('Admin/Dashboard/Index', [
             'totalUsers' => $totalUsers,
+            'usersWithProfilePhoto' => $usersWithProfilePhoto,   // ✅ NEW
+            'usersWithFaceEnrolled' => $usersWithFaceEnrolled,   // ✅ NEW
             'unsettledViolations' => $unsettledViolations,
             'violationChartData' => $violationChartData,
+            'departmentViolationChartData' => $departmentViolationChartData,
+            'departmentUserCounts' => $departmentUserCounts,
+            'violationCodes' => $violations->pluck('violation_code')->values(),
         ]);
+    }
+
+
+
+
+    private function fetchDepartmentUserCounts(SisApiService $sisApi)
+    {
+        $structureResponse = $sisApi->get('/api/school-structure');
+
+        if (!$structureResponse->ok()) {
+            return [];
+        }
+
+        $departments = $structureResponse->json()['departments'] ?? [];
+
+        $results = [];
+
+        foreach ($departments as $department) {
+
+            $studentResponse = $sisApi->get(
+                '/api/student-enrollment?department_id[]=' . $department['id']
+            );
+
+            if (!$studentResponse->ok()) {
+                continue;
+            }
+
+            $userIds = $studentResponse->json()['user_id_no'] ?? [];
+
+            $localCount = User::whereIn('user_id_no', $userIds)
+                ->where('user_role', 'student')
+                ->count();
+
+            $results[] = [
+                'department_id' => $department['id'],
+                'department_name' => $department['department_name'],
+                'student_count' => $localCount,
+            ];
+        }
+
+        return $results;
+    }
+
+    private function fetchSchoolStructure(Request $request, SisApiService $sisApi)
+    {
+        $filters = $request->query();
+        $query = http_build_query($filters);
+
+        $response = $sisApi->get("/api/school-structure" . ($query ? "?{$query}" : ""));
+
+        if (!$response->ok()) {
+            throw new \Exception('Failed to fetch school structure data');
+        }
+
+        return $response->json();
     }
 
 

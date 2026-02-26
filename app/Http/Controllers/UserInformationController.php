@@ -264,7 +264,7 @@ class UserInformationController extends Controller
         }
     }
 
-    public function getStudentEnrollmentAPI(Request $request)
+    public function getUsersCount(Request $request)
     {
         // Accept user_id_no[] as array
         $userIdNos = $request->query('user_id_no', []);

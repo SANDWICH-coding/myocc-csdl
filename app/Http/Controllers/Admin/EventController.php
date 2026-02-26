@@ -102,7 +102,7 @@ class EventController extends Controller
     //     return inertia('Admin/Events/Index', ['events' => $events]);
     // }
 
-    
+
     public function index()
     {
         return Inertia::render('Maintenance');
@@ -197,14 +197,16 @@ class EventController extends Controller
         ], 201);
     }
 
-    public function create()
+    public function create(Request $request, SisApiService $sisApi)
     {
         $sanctions = Sanction::where('status', 1)->get();
         $locations = Location::where('status', 1)->get();
 
-        // Fetch school structure from API
-        $response = $this->fetchSchoolStructureAPI(request());
-        $schoolStructure = $response->getData()->data ?? null;
+        try {
+            $schoolStructure = $this->fetchSchoolStructure($request, $sisApi);
+        } catch (\Exception $e) {
+            $schoolStructure = null;
+        }
 
         return response()->json([
             'sanctions' => $sanctions,
@@ -213,33 +215,18 @@ class EventController extends Controller
         ]);
     }
 
-
-    public function fetchSchoolStructureAPI(Request $request)
+    private function fetchSchoolStructure(Request $request, SisApiService $sisApi)
     {
-        try {
-            $query = $request->query(); // forward all filters
+        $filters = $request->query();
+        $query = http_build_query($filters);
 
-            $response = Http::withToken(env('API_ENROLLMENT_SYSTEM_TOKEN'))
-                ->get(env('API_ENROLLMENT_SYSTEM_URL') . '/api/school-structure', $query);
+        $response = $sisApi->get("/api/school-structure" . ($query ? "?{$query}" : ""));
 
-            if ($response->ok()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Successfully communicated with the API',
-                    'data' => $response->json(),
-                ]);
-            } else {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'API responded with an error',
-                ], 500);
-            }
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to communicate with the API: ' . $e->getMessage(),
-            ], 500);
+        if (!$response->ok()) {
+            throw new \Exception('Failed to fetch school structure data');
         }
+
+        return $response->json();
     }
 
     public function edit(Event $event)
