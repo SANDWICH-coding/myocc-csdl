@@ -129,7 +129,11 @@ export default function StudentResultModal({
                                         >
                                             {student.avatar ? (
                                                 <img
-                                                    src={student.avatar}
+                                                    src={
+                                                        student.avatar.startsWith("profile-photos/")
+                                                            ? `/storage/${student.avatar}`
+                                                            : `https://lh3.googleusercontent.com/d/${student.avatar}`
+                                                    }
                                                     alt="Student Avatar"
                                                     className="w-full h-full object-cover"
                                                 />

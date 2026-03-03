@@ -32,6 +32,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/profile/avatar', [UserProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
     Route::post('/profile/change-password', [UserProfileController::class, 'changePassword'])->name('profile.password.change');
 
+    Route::middleware('role:super_admin')->group(function () {
+        Route::get('/super-admin/dashboard', [\App\Http\Controllers\SuperAdmin\DashboardController::class, 'index'])->name('superadmin.dashboard');
+
+    });
+
     // ADMIN AREA
     Route::middleware('role:admin')->group(function () {
         Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');

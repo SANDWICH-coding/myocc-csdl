@@ -1,3 +1,4 @@
+import { Copy } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -26,13 +27,23 @@ export default function DepartmentViolationBarChart({
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
 
-      <div className="mb-4">
-        <h2 className="text-base md:text-lg font-semibold text-gray-800">
-          Violation Statistics Per Department
-        </h2>
-        <p className="text-xs text-gray-500">
-          Comparison of violations by department
-        </p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Violation Records
+          </h2>
+          <p className="text-sm text-gray-500">
+            Comparison of violation records across departments
+          </p>
+        </div>
+
+        {/* ACTION BUTTONS */}
+        <div className="flex justify-end mb-4">
+          <button
+          >
+            <Copy size={18} />
+          </button>
+        </div>
       </div>
 
       <div style={{ width: "100%", height: 400 }}>

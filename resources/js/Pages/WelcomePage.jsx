@@ -28,7 +28,7 @@ export default function WelcomePage() {
     }, []);
 
     return (
-        <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 text-white">
+        <div className="relative min-h-screen flex flex-col overflow-x-hidden bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 text-white">
 
             {/* Decorative blurred gradients */}
             <div className="pointer-events-none absolute -top-32 left-0 h-96 w-96 -translate-x-1/2 rounded-full bg-cyan-400/40 blur-3xl" />
@@ -119,7 +119,7 @@ export default function WelcomePage() {
             </header>
 
             {/* Hero Section */}
-            <main id="home" className="relative z-10 overflow-hidden">
+            <main id="home" className="relative z-10 overflow-hidden flex-1">
                 <div className="mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 py-20 md:grid-cols-2">
 
                     {/* Left Content */}

@@ -12,9 +12,18 @@ import { router } from "@inertiajs/react";
 import { useRef, useState } from "react";
 import toast from "react-hot-toast";
 import axios from 'axios';
+import Cropper from "react-easy-crop";
 
 export default function Index({ auth, studentData, userInfoData, avatar }) {
     const user = auth?.user;
+
+    const [imageSrc, setImageSrc] = useState(null);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+    const [showCropModal, setShowCropModal] = useState(false);
+
+    const [isUploading, setIsUploading] = useState(false);
 
     const [showChangePassword, setShowChangePassword] = useState(false);
 
@@ -38,28 +47,94 @@ export default function Index({ auth, studentData, userInfoData, avatar }) {
         const file = e.target.files[0];
         if (!file) return;
 
-        setPreview(URL.createObjectURL(file));
+        const reader = new FileReader();
+        reader.onload = () => {
+            setImageSrc(reader.result);
+            setShowCropModal(true);
+        };
+        reader.readAsDataURL(file);
+    };
 
-        const uploadPromise = new Promise((resolve, reject) => {
-            router.post("/profile/avatar", { avatar: file }, {
-                forceFormData: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    setPreview(null);
-                    router.reload({ only: ['avatar'] });
-                    resolve();
-                },
-                onError: (errors) => {
-                    reject(errors);
-                }
+    const onCropComplete = (croppedArea, croppedAreaPixels) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    };
+
+    const createImage = (url) =>
+        new Promise((resolve, reject) => {
+            const image = new Image();
+            image.addEventListener("load", () => resolve(image));
+            image.addEventListener("error", (error) => reject(error));
+            image.setAttribute("crossOrigin", "anonymous");
+            image.src = url;
+        });
+
+    const getCroppedImg = async (imageSrc, pixelCrop) => {
+        const image = await createImage(imageSrc);
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return null;
+
+        const size = 400;
+        const scale = window.devicePixelRatio || 1;
+
+        canvas.width = size * scale;
+        canvas.height = size * scale;
+
+        ctx.scale(scale, scale);
+
+        ctx.drawImage(
+            image,
+            pixelCrop.x,
+            pixelCrop.y,
+            pixelCrop.width,
+            pixelCrop.height,
+            0,
+            0,
+            size,
+            size
+        );
+
+        return new Promise((resolve) => {
+            canvas.toBlob(
+                (blob) => resolve(blob),
+                "image/jpeg",
+                0.9
+            );
+        });
+    };
+
+    const handleCropSave = async () => {
+        if (!croppedAreaPixels || isUploading) return;
+
+        setIsUploading(true);
+
+        try {
+            const croppedBlob = await getCroppedImg(imageSrc, croppedAreaPixels);
+            if (!croppedBlob) return;
+
+            await new Promise((resolve, reject) => {
+                router.post("/profile/avatar", { avatar: croppedBlob }, {
+                    forceFormData: true,
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setShowCropModal(false);
+                        setImageSrc(null);
+                        setCrop({ x: 0, y: 0 });
+                        setZoom(1);
+                        setCroppedAreaPixels(null);
+                        router.reload({ only: ['avatar'] });
+                        resolve();
+                    },
+                    onError: () => reject(),
+                });
             });
-        });
 
-        toast.promise(uploadPromise, {
-            loading: "Uploading avatar...",
-            success: "Profile picture updated successfully",
-            error: "Failed to upload avatar",
-        });
+            toast.success("Profile picture updated!");
+        } catch (error) {
+            toast.error("Upload failed");
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     const isPasswordMismatch = newPassword && confirmPassword && newPassword !== confirmPassword;
@@ -116,16 +191,8 @@ export default function Index({ auth, studentData, userInfoData, avatar }) {
                                 onClick={handleAvatarClick}
                                 className="cursor-pointer w-full h-full border-4 border-gray-300 overflow-hidden shadow-sm relative"
                             >
-                                {preview ? (
-                                    <img
-                                        src={preview}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : avatar ? (
-                                    <img
-                                        src={avatar}
-                                        className="w-full h-full object-cover"
-                                    />
+                                {avatar ? (
+                                    <img src={avatar} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                                         <UserIcon className="w-24 h-24 text-gray-500" />
@@ -320,6 +387,72 @@ export default function Index({ auth, studentData, userInfoData, avatar }) {
                     </button>
                 </div>
             </div>
+
+            {showCropModal && (
+                <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center">
+                    <div className="bg-white rounded-xl p-6 w-[90%] max-w-md">
+
+                        <h1 className="text-lg font-semibold text-gray-800 mb-4">Crop Image</h1>
+
+                        <div className="relative w-full h-64 bg-gray-200">
+                            <Cropper
+                                image={imageSrc}
+                                crop={crop}
+                                zoom={zoom}
+                                aspect={1} //
+                                onCropChange={setCrop}
+                                onZoomChange={setZoom}
+                                onCropComplete={onCropComplete}
+                            />
+                        </div>
+
+                        <div className="mt-4">
+                            <input
+                                type="range"
+                                min={1}
+                                max={3}
+                                step={0.1}
+                                value={zoom}
+                                onChange={(e) => setZoom(e.target.value)}
+                                className="w-full"
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-3 mt-4">
+                            <button
+                                onClick={() => {
+                                    if (isUploading) return;
+                                    setShowCropModal(false);
+                                    setImageSrc(null);
+                                }}
+                                disabled={isUploading}
+                                className={`
+            px-4 py-2 text-sm rounded-md transition
+            ${isUploading
+                                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                        : "bg-gray-300 hover:bg-gray-400"}
+        `}
+                            >
+                                Cancel
+                            </button>
+
+                            <button
+                                onClick={handleCropSave}
+                                disabled={isUploading}
+                                className={`
+            px-4 py-2 text-sm text-white rounded-md shadow-md transition
+            ${isUploading
+                                        ? "bg-indigo-400 cursor-not-allowed"
+                                        : "bg-indigo-600 hover:bg-indigo-700"}
+        `}
+                            >
+                                {isUploading ? "Uploading..." : "Save"}
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
         </AppLayout>
     );
 }

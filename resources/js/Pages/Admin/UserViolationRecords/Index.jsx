@@ -218,7 +218,7 @@ export default function Index({ auth, violations, filters }) {
                                 Violation Receipt
                             </h2>
                             <p className="text-xs opacity-80 mt-1">
-                                Official Record Confirmation
+                                Official Record
                             </p>
                         </div>
 

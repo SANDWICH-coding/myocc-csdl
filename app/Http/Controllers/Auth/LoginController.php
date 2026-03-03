@@ -45,6 +45,7 @@ class LoginController extends Controller
         $user = auth()->user();
 
         $redirect = match ($user->user_role) {
+            'super_admin' => route('superadmin.dashboard'),
             'admin' => route('admin.dashboard'),
             'security' => route('security.dashboard'),
             'student' => route('student.dashboard'),
@@ -71,6 +72,7 @@ class LoginController extends Controller
     private function redirectBasedOnRole()
     {
         return match (auth()->user()->user_role) {
+            'super_admin' => Inertia::location(route('superadmin.dashboard')),
             'admin' => Inertia::location(route('admin.dashboard')),
             'security' => Inertia::location(route('security.dashboard')),
             'student' => Inertia::location(route('student.dashboard')),

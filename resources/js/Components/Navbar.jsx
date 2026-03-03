@@ -54,7 +54,11 @@ export default function Navbar({ user, onMobileMenu, breadcrumbs = [] }) {
                     >
                         {user?.profile_photo ? (
                             <img
-                                src={`/storage/${user.profile_photo}`}
+                                src={
+                                    user.profile_photo.startsWith("profile-photos/")
+                                        ? `/storage/${user.profile_photo}`
+                                        : `https://lh3.googleusercontent.com/d/${user.profile_photo}`
+                                }
                                 alt="User Avatar"
                                 className="h-9 w-9 ring ring-gray-300 rounded-full object-cover"
                             />
@@ -67,9 +71,8 @@ export default function Navbar({ user, onMobileMenu, breadcrumbs = [] }) {
                         <div className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-lg border z-30">
                             <button
                                 onClick={() => router.visit('/profile')}
-                                className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${
-                                    isProfileActive ? 'bg-indigo-50 text-indigo-600 font-medium' : ''
-                                }`}
+                                className={`w-full text-left px-4 py-2 hover:bg-gray-100 ${isProfileActive ? 'bg-indigo-50 text-indigo-600 font-medium' : ''
+                                    }`}
                             >
                                 Profile
                             </button>
@@ -100,19 +103,21 @@ export default function Navbar({ user, onMobileMenu, breadcrumbs = [] }) {
                     {/* PROFILE TAB */}
                     <button
                         onClick={() => router.visit('/profile')}
-                        className={`flex flex-col items-center transition ${
-                            isProfileActive
-                                ? 'text-indigo-600'
-                                : 'text-gray-600 hover:text-indigo-600'
-                        }`}
+                        className={`flex flex-col items-center transition ${isProfileActive
+                            ? 'text-indigo-600'
+                            : 'text-gray-600 hover:text-indigo-600'
+                            }`}
                     >
                         {user?.profile_photo ? (
                             <img
-                                src={`/storage/${user.profile_photo}`}
+                                src={
+                                    user.profile_photo.startsWith("profile-photos/")
+                                        ? `/storage/${user.profile_photo}`
+                                        : `https://lh3.googleusercontent.com/d/${user.profile_photo}`
+                                }
                                 alt="User Avatar"
-                                className={`h-7 w-7 rounded-full ring-2 ring-gray-100 object-cover ${
-                                    isProfileActive ? 'ring-2 ring-indigo-500' : ''
-                                }`}
+                                className={`h-7 w-7 rounded-full ring-2 ring-gray-100 object-cover ${isProfileActive ? 'ring-2 ring-indigo-500' : ''
+                                    }`}
                             />
                         ) : (
                             <UserCircleIcon className="h-7 w-7" />

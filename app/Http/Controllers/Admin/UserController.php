@@ -43,9 +43,7 @@ class UserController extends Controller
                 'id' => $user->id,
                 'user_id_no' => $user->user_id_no,
                 'user_role' => $user->user_role,
-                'avatar' => $user->profile_photo
-                    ? Storage::disk('public')->url($user->profile_photo) . '?t=' . time()
-                    : null,
+                'avatar' => $user->profile_photo,
             ];
         });
 
@@ -135,9 +133,7 @@ class UserController extends Controller
 
             $student['user_exists'] = $user ? true : false;
 
-            $student['avatar'] = $user && $user->profile_photo
-                ? Storage::disk('public')->url($user->profile_photo) . '?t=' . time()
-                : null;
+            $student['avatar'] = $user ? $user->profile_photo : null;
 
             return $student;
         });

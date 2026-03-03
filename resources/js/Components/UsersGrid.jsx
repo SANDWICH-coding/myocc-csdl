@@ -15,7 +15,7 @@ function getRoleBadgeColor(role) {
         case "moderator":
             return "bg-purple-500";
         default:
-            return "bg-gray-400"; 
+            return "bg-gray-400";
     }
 }
 
@@ -132,7 +132,11 @@ export default function UsersGrid({ users, filters }) {
     ">
                                     {user.avatar ? (
                                         <img
-                                            src={user.avatar}
+                                            src={
+                                                user.avatar.startsWith("profile-photos/")
+                                                    ? `/storage/${user.avatar}`
+                                                    : `https://lh3.googleusercontent.com/d/${user.avatar}`
+                                            }
                                             alt="Avatar"
                                             className="w-full h-full rounded-full object-cover"
                                         />

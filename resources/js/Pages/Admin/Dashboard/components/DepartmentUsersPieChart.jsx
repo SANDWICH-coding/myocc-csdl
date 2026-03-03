@@ -115,7 +115,6 @@ export default function DepartmentUsersPieChart({
                             </button>
                         </div>
                     )}
-
                 </div>
 
                 <div className="flex flex-col lg:flex-row gap-10">
@@ -228,7 +227,7 @@ export default function DepartmentUsersPieChart({
                                                     {dept.student_count}
                                                 </p>
                                                 <p className="text-xs text-gray-600 mt-1">
-                                                    {percentage}% of total
+                                                    {percentage}% of total users
                                                 </p>
                                             </div>
                                         </div>

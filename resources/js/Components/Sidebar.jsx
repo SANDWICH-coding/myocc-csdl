@@ -101,6 +101,22 @@ export default function Sidebar({ user, mobileOpen, setMobileOpen }) {
                 ],
             },
         ];
+    } else if (role === 'super_admin') {
+        links = [
+            {
+                label: 'Menu',
+                items: [
+                    { name: 'Dashboard', href: '/super-admin/dashboard', icon: LayoutDashboard },
+                ],
+            },
+
+            // {
+            //     label: 'Records',
+            //     items: [
+            //         { name: 'Violation', href: '/super-admin/violations', icon: Tickets },
+            //     ],
+            // },
+        ];
     }
 
     const sidebarClass = collapsed ? 'w-20' : 'w-64';

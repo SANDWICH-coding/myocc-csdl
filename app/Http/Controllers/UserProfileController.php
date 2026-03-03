@@ -7,6 +7,7 @@ use App\Models\UserInformation;
 use App\Services\SisApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
@@ -17,14 +18,14 @@ class UserProfileController extends Controller
     {
         $user = auth()->user();
 
-        // Build avatar from users table
-        $avatar = $user->profile_photo
-            ? Storage::disk('public')->url($user->profile_photo) . '?t=' . time()
-            : null;
+        $avatar = $user->profile_photo;
 
         $studentData = null;
         $userInfoData = null;
 
+        // =============================
+        // STUDENT ROLE
+        // =============================
         if ($user->user_role === 'student') {
 
             $studentData = $this->fetchStudentData($user->user_id_no, $sisApi);
@@ -39,10 +40,20 @@ class UserProfileController extends Controller
                     'email_address',
                 ])
                 ->first();
+        }
 
-            // If user table has no avatar, fallback to user_information
-            if ($userInfoData && !$avatar && $userInfoData->profile_photo) {
-                $avatar = Storage::disk('public')->url($userInfoData->profile_photo) . '?t=' . time();
+        // =============================
+        // AVATAR RESOLVER LOGIC
+        // =============================
+        if ($avatar) {
+
+            // If stored locally (profile-photos/...)
+            if (str_starts_with($avatar, 'profile-photos/')) {
+                $avatar = Storage::disk('public')->url($avatar) . '?t=' . time();
+            }
+            // Otherwise assume Google photo ID
+            else {
+                $avatar = "https://lh3.googleusercontent.com/d/" . $avatar;
             }
         }
 
@@ -94,16 +105,47 @@ class UserProfileController extends Controller
         $user = auth()->user();
 
         // Delete old photo if exists
-        if ($user->profile_photo && Storage::disk('public')->exists($user->profile_photo)) {
-            Storage::disk('public')->delete($user->profile_photo);
-        }
+        // if ($user->profile_photo && Storage::disk('public')->exists($user->profile_photo)) {
+        //     Storage::disk('public')->delete($user->profile_photo);
+        // }
 
         // Store new photo
-        $path = $request->file('avatar')->store('profile-photos', 'public');
+        // $path = $request->file('avatar')->store('profile-photos', 'public');
 
-        $user->update([
-            'profile_photo' => $path,
-        ]);
+        $accessToken = $this->token();
+
+        $folderId = $this->getOrCreateFolder($accessToken, 'UserProfile', config('services.google.folder_id'));
+
+        $file = $request->file('avatar');
+        $mimeType = $file->getMimeType();
+
+        $metadata = [
+            'name' => 'temp_' . time(),
+            'parents' => [$folderId],
+        ];
+
+        $uploadResponse = Http::withToken($accessToken)
+            ->attach('metadata', json_encode($metadata), 'metadata.json', ['Content-Type' => 'application/json'])
+            ->attach('media', file_get_contents($file), $file->getClientOriginalName(), ['Content-Type' => $mimeType])
+            ->post('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
+
+        if ($uploadResponse->successful()) {
+            $fileId = $uploadResponse->json()['id'];
+
+            Http::withToken($accessToken)->patch("https://www.googleapis.com/drive/v3/files/{$fileId}", [
+                'name' => $fileId,
+            ]);
+
+            Http::withToken($accessToken)->post("https://www.googleapis.com/drive/v3/files/{$fileId}/permissions", [
+                'role' => 'reader',
+                'type' => 'anyone',
+            ]);
+
+            $user->update([
+                'profile_photo' => $fileId,
+            ]);
+
+        }
 
         return back();
     }
